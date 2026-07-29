@@ -1,0 +1,156 @@
+/* ==========================================================================
+   SIMPLES AGENDA PRO - MOBILE & TABLET RESPONSIVE ENGINE
+   ========================================================================== */
+
+.mobile-bottom-nav {
+  display: none;
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  width: 100vw;
+  height: 66px;
+  background: rgba(255, 255, 255, 0.96);
+  backdrop-filter: blur(16px);
+  border-top: 1px solid var(--border-color);
+  z-index: 99;
+  justify-content: space-around;
+  align-items: center;
+  box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.08);
+}
+
+[data-theme="dark"] .mobile-bottom-nav {
+  background: rgba(17, 28, 51, 0.96);
+}
+
+.mobile-nav-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+  font-size: 0.725rem;
+  font-weight: 700;
+  cursor: pointer;
+  flex: 1;
+  height: 100%;
+}
+
+.mobile-nav-item i {
+  width: 20px;
+  height: 20px;
+}
+
+.mobile-nav-item.active {
+  color: var(--primary);
+  font-weight: 800;
+}
+
+.fab-space {
+  position: relative;
+}
+
+.fab-circle {
+  position: absolute;
+  top: -24px;
+  width: 54px;
+  height: 54px;
+  border-radius: 50%;
+  background: var(--orange-gradient);
+  color: #FFFFFF;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 6px 18px rgba(249, 115, 22, 0.45);
+  border: 4px solid var(--bg-surface);
+  transition: transform var(--transition-fast);
+}
+
+.fab-circle:active {
+  transform: scale(0.92);
+}
+
+/* Tablet (max-width: 992px) */
+@media (max-width: 992px) {
+  .sidebar {
+    position: fixed;
+    left: -270px;
+    top: 0;
+    height: 100vh;
+  }
+
+  .sidebar.mobile-open {
+    left: 0;
+  }
+
+  .mobile-menu-btn {
+    display: inline-flex;
+  }
+
+  .content-body {
+    padding: 1.25rem;
+  }
+}
+
+/* Mobile (max-width: 640px) */
+@media (max-width: 640px) {
+  .mobile-bottom-nav {
+    display: flex;
+  }
+
+  .content-body {
+    padding: 1rem;
+    padding-bottom: 84px;
+  }
+
+  .top-header {
+    padding: 0 1rem;
+    height: 60px;
+  }
+
+  .hidden-mobile {
+    display: none !important;
+  }
+
+  .agenda-toolbar {
+    flex-direction: column;
+    align-items: stretch;
+    padding: 1rem;
+  }
+
+  .agenda-view-selector {
+    justify-content: space-between;
+  }
+
+  .view-btn {
+    flex: 1;
+    text-align: center;
+    padding: 0.5rem 0.4rem;
+  }
+
+  .appointment-card {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.85rem;
+  }
+
+  .appt-actions {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .metrics-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .modal-container {
+    max-height: 95vh;
+    border-radius: var(--radius-md);
+  }
+
+  .modal-header, .modal-body {
+    padding: 1.1rem;
+  }
+}

@@ -1,0 +1,8 @@
+{
+  "version": 2,
+  "cleanUrls": true,
+  "routes": [
+    { "src": "/agendar", "dest": "/agendar.html" },
+    { "src": "/(.*)", "dest": "/$1" }
+  ]
+}

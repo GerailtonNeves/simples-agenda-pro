@@ -1,0 +1,389 @@
+<!DOCTYPE html>
+<html lang="pt-BR" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Agendamento Online Público - Escolha seu Horário</title>
+  <meta name="description" content="Portal público de autoagendamento online. Escolha o serviço, data e horário para seu atendimento.">
+  
+  <!-- Fontes Google -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  
+  <!-- Ícones Lucide -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+
+  <!-- Estilos -->
+  <link rel="stylesheet" href="css/main.css">
+  <link rel="stylesheet" href="css/components.css">
+  <link rel="stylesheet" href="css/responsive.css">
+
+  <style>
+    body {
+      background-color: var(--bg-app);
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+      min-height: 100vh;
+      padding: 1rem;
+    }
+
+    .public-portal-card {
+      width: 100%;
+      max-width: 480px;
+      background: var(--bg-surface);
+      border-radius: var(--radius-lg);
+      box-shadow: var(--shadow-lg);
+      border: 1px solid var(--border-color);
+      overflow: hidden;
+      margin-top: 1rem;
+      margin-bottom: 2rem;
+    }
+
+    .portal-top-header {
+      background: var(--bg-sidebar);
+      color: #FFFFFF;
+      padding: 1.75rem 1.5rem;
+      text-align: center;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.75rem;
+    }
+
+    .portal-business-logo {
+      width: 72px;
+      height: 72px;
+      border-radius: var(--radius-md);
+      object-fit: cover;
+      border: 3px solid #FFFFFF;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+    }
+
+    .portal-business-name {
+      font-size: 1.4rem;
+      font-weight: 800;
+      color: #FFFFFF;
+    }
+
+    .portal-business-sub {
+      font-size: 0.85rem;
+      color: #E0F2FE;
+    }
+
+    .step-indicator-bar {
+      display: flex;
+      background: var(--bg-surface-secondary);
+      padding: 0.75rem 1rem;
+      border-bottom: 1px solid var(--border-color);
+      font-size: 0.85rem;
+      font-weight: 700;
+      justify-content: space-between;
+      color: var(--text-muted);
+    }
+
+    .step-indicator-bar span.active {
+      color: var(--primary);
+    }
+
+    .portal-content-body {
+      padding: 1.5rem;
+    }
+
+    .service-selection-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 1rem;
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-md);
+      margin-bottom: 0.75rem;
+      cursor: pointer;
+      transition: all var(--transition-fast);
+      background: var(--bg-surface);
+    }
+
+    .service-selection-item:hover {
+      border-color: var(--primary);
+      transform: translateY(-2px);
+      box-shadow: var(--shadow-sm);
+    }
+
+    .time-slot-btn {
+      padding: 0.6rem;
+      font-size: 0.85rem;
+      font-weight: 700;
+      border-radius: var(--radius-sm);
+      border: 1px solid var(--border-color);
+      background: var(--bg-surface);
+      cursor: pointer;
+      transition: all var(--transition-fast);
+      text-align: center;
+    }
+
+    .time-slot-btn:hover, .time-slot-btn.selected {
+      background: var(--primary-gradient);
+      color: #FFFFFF;
+      border-color: var(--primary);
+      box-shadow: 0 4px 10px rgba(14, 165, 233, 0.3);
+    }
+  </style>
+</head>
+<body>
+
+  <div class="public-portal-card">
+    <div class="portal-top-header">
+      <div id="logoWrapper" class="hidden">
+        <img id="portalLogo" src="" alt="Logo" class="portal-business-logo">
+      </div>
+      <h2 id="portalName" class="portal-business-name">Carregando...</h2>
+      <p id="portalSub" class="portal-business-sub">Agendamento Online de Horários</p>
+    </div>
+
+    <div class="step-indicator-bar">
+      <span id="stepTag1" class="active">1. Serviço</span>
+      <span id="stepTag2">2. Data e Hora</span>
+      <span id="stepTag3">3. Seus Dados</span>
+    </div>
+
+    <div class="portal-content-body" id="portalBody">
+      <!-- Conteúdo injetado via JS -->
+    </div>
+  </div>
+
+  <script src="js/store.js"></script>
+  <script src="js/whatsapp.js"></script>
+  <script>
+    let currentStep = 1;
+    let selectedService = null;
+    let selectedDate = new Date().toISOString().split('T')[0];
+    let selectedTime = null;
+
+    document.addEventListener('DOMContentLoaded', () => {
+      loadBusinessProfile();
+      renderStep();
+    });
+
+    function loadBusinessProfile() {
+      const settings = window.Store.getSettings();
+      const nameElem = document.getElementById('portalName');
+      const logoElem = document.getElementById('portalLogo');
+      const logoWrapper = document.getElementById('logoWrapper');
+
+      if (nameElem) nameElem.textContent = settings.businessName || 'Simples Agenda Pro';
+      if (settings.businessLogo && logoElem && logoWrapper) {
+        logoElem.src = settings.businessLogo;
+        logoWrapper.classList.remove('hidden');
+      }
+    }
+
+    function updateStepTags() {
+      document.getElementById('stepTag1').className = currentStep === 1 ? 'active' : '';
+      document.getElementById('stepTag2').className = currentStep === 2 ? 'active' : '';
+      document.getElementById('stepTag3').className = currentStep === 3 ? 'active' : '';
+    }
+
+    function renderStep() {
+      updateStepTags();
+      const body = document.getElementById('portalBody');
+      if (!body) return;
+
+      if (currentStep === 1) renderStep1(body);
+      else if (currentStep === 2) renderStep2(body);
+      else if (currentStep === 3) renderStep3(body);
+      else if (currentStep === 4) renderStep4(body);
+
+      if (window.lucide) window.lucide.createIcons();
+    }
+
+    function renderStep1(container) {
+      const services = window.Store.getServices();
+      
+      let html = `<h3 style="font-size:1.1rem; font-weight:800; margin-bottom:1rem">Escolha o serviço desejado:</h3>`;
+
+      if (services.length === 0) {
+        html += `<p class="text-muted">Nenhum serviço disponível no momento.</p>`;
+      } else {
+        services.forEach(srv => {
+          html += `
+            <div class="service-selection-item" onclick="selectService('${srv.id}')" style="border-left: 5px solid ${srv.color || '#0EA5E9'}">
+              <div>
+                <strong style="font-size:1rem">${srv.name}</strong>
+                <div class="text-muted" style="font-size:0.8rem; margin-top:2px">
+                  <i data-lucide="clock" style="width:14px; height:14px; vertical-align:middle"></i> ${srv.duration} minutos
+                </div>
+              </div>
+              <div style="font-size:1.2rem; font-weight:800; color:var(--primary)">
+                R$ ${parseFloat(srv.price).toFixed(2).replace('.', ',')}
+              </div>
+            </div>
+          `;
+        });
+      }
+
+      container.innerHTML = html;
+    }
+
+    function selectService(srvId) {
+      const services = window.Store.getServices();
+      selectedService = services.find(s => s.id === srvId);
+      currentStep = 2;
+      renderStep();
+    }
+
+    function renderStep2(container) {
+      const availableTimes = ['08:00', '09:00', '10:00', '11:00', '14:00', '15:00', '16:00', '17:00', '18:00', '19:00'];
+
+      let html = `
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem">
+          <h3 style="font-size:1.1rem; font-weight:800">Escolha a data e horário:</h3>
+          <button class="btn btn-light btn-xs" onclick="currentStep=1; renderStep()">← Voltar</button>
+        </div>
+
+        <div style="background:var(--primary-light); padding:0.85rem; border-radius:var(--radius-md); margin-bottom:1rem; font-size:0.875rem">
+          Serviço selecionado: <strong>${selectedService.name}</strong> (R$ ${parseFloat(selectedService.price).toFixed(2).replace('.', ',')})
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Data do Agendamento *</label>
+          <input type="date" id="dateSelector" value="${selectedDate}" class="form-control" min="${new Date().toISOString().split('T')[0]}">
+        </div>
+
+        <label class="form-label" style="margin-top:1rem">Horários Disponíveis *</label>
+        <div style="display:grid; grid-template-columns:repeat(3, 1fr); gap:0.6rem; margin-top:0.5rem">
+      `;
+
+      availableTimes.forEach(t => {
+        const isSelected = selectedTime === t;
+        html += `
+          <button class="time-slot-btn ${isSelected ? 'selected' : ''}" onclick="selectTime('${t}')">${t}</button>
+        `;
+      });
+
+      html += `</div>`;
+      container.innerHTML = html;
+
+      document.getElementById('dateSelector').onchange = (e) => {
+        selectedDate = e.target.value;
+      };
+    }
+
+    function selectTime(timeStr) {
+      selectedTime = timeStr;
+      currentStep = 3;
+      renderStep();
+    }
+
+    function renderStep3(container) {
+      let html = `
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem">
+          <h3 style="font-size:1.1rem; font-weight:800">Informe seus dados para confirmar:</h3>
+          <button class="btn btn-light btn-xs" onclick="currentStep=2; renderStep()">← Voltar</button>
+        </div>
+
+        <div style="background:var(--accent-orange-light); padding:0.85rem; border-radius:var(--radius-md); margin-bottom:1.25rem; font-size:0.85rem; color:#C2410C">
+          📅 <strong>${selectedDate.split('-').reverse().join('/')} às ${selectedTime}</strong><br>
+          💇 ${selectedService.name} - R$ ${parseFloat(selectedService.price).toFixed(2).replace('.', ',')}
+        </div>
+
+        <form id="publicBookingForm" style="display:flex; flex-direction:column; gap:1rem">
+          <div class="form-group">
+            <label class="form-label">Seu Nome Completo *</label>
+            <input type="text" id="custName" class="form-control" required placeholder="Digite seu nome completo">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Seu WhatsApp *</label>
+            <input type="tel" id="custPhone" class="form-control" required placeholder="(11) 99999-9999">
+          </div>
+
+          <button type="submit" class="btn btn-orange w-full" style="margin-top:0.5rem">
+            <i data-lucide="check-circle"></i> Confirmar Agendamento Agora
+          </button>
+        </form>
+      `;
+
+      container.innerHTML = html;
+
+      document.getElementById('publicBookingForm').onsubmit = (e) => {
+        e.preventDefault();
+        const name = document.getElementById('custName').value;
+        const phone = document.getElementById('custPhone').value;
+
+        let clients = window.Store.getClients();
+        let client = clients.find(c => c.phone.replace(/\D/g, '') === phone.replace(/\D/g, ''));
+        if (!client) {
+          client = {
+            id: window.Store.generateId('cli'),
+            name,
+            phone,
+            email: '',
+            birthDate: '',
+            anamnesis: 'Cliente agendou via Portal Público Online.'
+          };
+          clients.push(client);
+          window.Store.saveClients(clients);
+        }
+
+        const newAppt = {
+          id: window.Store.generateId('app'),
+          clientId: client.id,
+          serviceId: selectedService.id,
+          date: selectedDate,
+          time: selectedTime,
+          price: selectedService.price,
+          status: 'scheduled',
+          notes: 'Solicitado via Link de Agendamento Online Público'
+        };
+
+        const appts = window.Store.getAppointments();
+        appts.push(newAppt);
+        window.Store.saveAppointments(appts);
+
+        window.lastCreatedAppt = newAppt;
+        window.lastClient = client;
+
+        currentStep = 4;
+        renderStep();
+      };
+    }
+
+    function renderStep4(container) {
+      const appt = window.lastCreatedAppt;
+      const client = window.lastClient;
+
+      container.innerHTML = `
+        <div style="text-align:center; padding:1.5rem 0">
+          <i data-lucide="check-circle-2" style="width:64px; height:64px; color:var(--whatsapp); margin-bottom:1rem"></i>
+          <h2 style="font-size:1.4rem; font-weight:800; color:var(--whatsapp)">Agendamento Concluído!</h2>
+          <p class="text-muted" style="margin-top:0.5rem; font-size:0.9rem">
+            Seu horário foi reservado com sucesso no sistema!
+          </p>
+
+          <div class="card margin-top" style="text-align:left; background:var(--bg-surface-secondary)">
+            <div style="font-size:0.85rem; font-weight:700">Resumo do Agendamento:</div>
+            <div style="margin-top:0.5rem; font-size:0.9rem">
+              • <strong>Cliente:</strong> ${client ? client.name : ''}<br>
+              • <strong>Data:</strong> ${appt ? appt.date.split('-').reverse().join('/') : ''} às ${appt ? appt.time : ''}<br>
+              • <strong>Serviço:</strong> ${selectedService ? selectedService.name : ''}<br>
+              • <strong>Valor:</strong> R$ ${selectedService ? parseFloat(selectedService.price).toFixed(2).replace('.', ',') : '0,00'}
+            </div>
+          </div>
+
+          <button id="btnSendWAConfirmation" class="btn btn-whatsapp w-full margin-top">
+            <i data-lucide="send"></i> Abrir Confirmação no WhatsApp
+          </button>
+
+          <button class="btn btn-outline btn-sm w-full" style="margin-top:0.75rem" onclick="location.reload()">
+            Fazer Outro Agendamento
+          </button>
+        </div>
+      `;
+
+      document.getElementById('btnSendWAConfirmation').onclick = () => {
+        window.WhatsApp.sendBookingCreatedNotification(appt);
+      };
+    }
+  </script>
+</body>
+</html>
