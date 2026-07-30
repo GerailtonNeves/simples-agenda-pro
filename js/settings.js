@@ -1,5 +1,5 @@
 /* ==========================================================================
-   SIMPLES AGENDA PRO - SETTINGS & BUSINESS LOGO MANAGER
+   SIMPLES AGENDA PRO - SYSTEM SETTINGS & AUTOMATIC LOGO COMPRESSION
    ========================================================================== */
 
 class SettingsView {
@@ -7,131 +7,213 @@ class SettingsView {
 
   init() {
     this.bindEvents();
-    this.render();
+    this.loadSettings();
   }
 
   bindEvents() {
+    // Form de Dados do Negócio
     document.getElementById('settingsBusinessForm')?.addEventListener('submit', (e) => {
       e.preventDefault();
-      this.saveBusinessProfile();
+      this.saveBusinessData();
     });
 
+    // Upload de Logo Foto com Compressão Inteligente (Canvas)
+    const logoInput = document.getElementById('logoFileInput');
+    logoInput?.addEventListener('change', (e) => this.handleLogoUpload(e));
+
+    document.getElementById('btnRemoveLogo')?.addEventListener('click', () => this.removeLogo());
+
+    // Form de Templates do WhatsApp
     document.getElementById('settingsWhatsAppForm')?.addEventListener('submit', (e) => {
       e.preventDefault();
       this.saveWhatsAppTemplates();
     });
 
-    // Upload de Logo Foto
-    const logoInput = document.getElementById('logoFileInput');
-    logoInput?.addEventListener('change', (e) => {
-      const file = e.target.files[0];
-      if (file) {
-        const reader = new FileReader();
-        reader.onload = (event) => {
-          this.updateLogoPreview(event.target.result);
-        };
-        reader.readAsDataURL(file);
-      }
-    });
-
-    document.getElementById('btnRemoveLogo')?.addEventListener('click', () => {
-      this.updateLogoPreview('');
-    });
-
-    document.getElementById('btnExportBackup')?.addEventListener('click', () => {
-      this.exportBackupJSON();
-    });
-
-    document.getElementById('importBackupInput')?.addEventListener('change', (e) => {
-      this.importBackupJSON(e);
-    });
-
-    document.getElementById('btnResetData')?.addEventListener('click', () => {
-      if (confirm('Atenção: deseja resetar todos os dados do sistema para os dados padrões de demonstração?')) {
-        localStorage.clear();
-        window.location.reload();
-      }
-    });
+    // Backup & Restore
+    document.getElementById('btnExportBackup')?.addEventListener('click', () => this.exportBackup());
+    document.getElementById('importBackupInput')?.addEventListener('change', (e) => this.importBackup(e));
+    document.getElementById('btnResetData')?.addEventListener('click', () => this.resetData());
   }
 
-  render() {
-    const settings = window.Store.getSettings();
+  loadSettings() {
+    const settings = window.Store.getSettings() || {};
 
-    document.getElementById('settingBusinessName').value = settings.businessName || '';
-    document.getElementById('settingBusinessPhone').value = settings.businessPhone || '';
-    document.getElementById('settingBusinessAddress').value = settings.businessAddress || '';
+    const nameInput = document.getElementById('settingBusinessName');
+    const phoneInput = document.getElementById('settingBusinessPhone');
+    const addrInput = document.getElementById('settingBusinessAddress');
 
-    this.updateLogoPreview(settings.businessLogo || '');
+    if (nameInput) nameInput.value = settings.businessName || '';
+    if (phoneInput) phoneInput.value = settings.businessPhone || '';
+    if (addrInput) addrInput.value = settings.businessAddress || '';
 
-    const templates = settings.whatsappTemplates || {};
-    document.getElementById('settingMsgCreated').value = templates.created || '';
-    document.getElementById('settingMsgReminder').value = templates.reminder || '';
-    document.getElementById('settingMsgBirthday').value = templates.birthday || '';
+    this.updateLogoDisplays(settings.businessLogo);
+
+    const msgCreated = document.getElementById('settingMsgCreated');
+    const msgReminder = document.getElementById('settingMsgReminder');
+    const msgBirthday = document.getElementById('settingMsgBirthday');
+
+    if (msgCreated) msgCreated.value = settings.whatsappTemplates?.created || '';
+    if (msgReminder) msgReminder.value = settings.whatsappTemplates?.reminder || '';
+    if (msgBirthday) msgBirthday.value = settings.whatsappTemplates?.birthday || '';
   }
 
-  updateLogoPreview(logoBase64) {
-    const imgElem = document.getElementById('settingsLogoPreviewImg');
-    const placeholder = document.getElementById('settingsLogoPlaceholder');
-    const removeBtn = document.getElementById('btnRemoveLogo');
+  handleLogoUpload(event) {
+    const file = event.target.files[0];
+    if (!file) return;
 
-    const sidebarImg = document.getElementById('sidebarLogoImg');
-    const sidebarPlaceholder = document.getElementById('logoPlaceholder');
-    const mobileHeaderImg = document.getElementById('mobileHeaderLogoImg');
+    if (!file.type.startsWith('image/')) {
+      window.showToast('Por favor, selecione um arquivo de imagem válido (PNG, JPG, WebP).', 'danger');
+      return;
+    }
 
-    if (logoBase64) {
-      if (imgElem) { imgElem.src = logoBase64; imgElem.classList.remove('hidden'); }
-      if (placeholder) placeholder.classList.add('hidden');
-      if (removeBtn) removeBtn.classList.remove('hidden');
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const img = new Image();
+      img.onload = () => {
+        // Redimensionar e comprimir para ~300px para persistir perfeitamente no localStorage sem erro de tamanho
+        const canvas = document.createElement('canvas');
+        const MAX_SIZE = 300;
+        let width = img.width;
+        let height = img.height;
 
-      if (sidebarImg) { sidebarImg.src = logoBase64; sidebarImg.classList.remove('hidden'); }
-      if (sidebarPlaceholder) sidebarPlaceholder.classList.add('hidden');
-      if (mobileHeaderImg) { mobileHeaderImg.src = logoBase64; mobileHeaderImg.classList.remove('hidden'); }
-    } else {
-      if (imgElem) { imgElem.src = ''; imgElem.classList.add('hidden'); }
-      if (placeholder) placeholder.classList.remove('hidden');
-      if (removeBtn) removeBtn.classList.add('hidden');
+        if (width > height) {
+          if (width > MAX_SIZE) {
+            height *= MAX_SIZE / width;
+            width = MAX_SIZE;
+          }
+        } else {
+          if (height > MAX_SIZE) {
+            width *= MAX_SIZE / height;
+            height = MAX_SIZE;
+          }
+        }
 
-      if (sidebarImg) { sidebarImg.src = ''; sidebarImg.classList.add('hidden'); }
-      if (sidebarPlaceholder) sidebarPlaceholder.classList.remove('hidden');
-      if (mobileHeaderImg) { mobileHeaderImg.src = ''; mobileHeaderImg.classList.add('hidden'); }
+        canvas.width = width;
+        canvas.height = height;
+
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0, width, height);
+
+        // Gera string Base64 super leve (~20KB) e garantida no localStorage
+        const compressedBase64 = canvas.toDataURL('image/jpeg', 0.85);
+
+        const settings = window.Store.getSettings() || {};
+        settings.businessLogo = compressedBase64;
+        window.Store.saveSettings(settings);
+
+        this.updateLogoDisplays(compressedBase64);
+
+        if (window.BookingPortal) {
+          window.BookingPortal.render();
+        }
+
+        window.showToast('Foto da logo salva e ativada no Portal do Cliente com sucesso!', 'success');
+      };
+      img.src = e.target.result;
+    };
+    reader.readAsDataURL(file);
+  }
+
+  removeLogo() {
+    if (confirm('Deseja remover a foto da logo?')) {
+      const settings = window.Store.getSettings() || {};
+      settings.businessLogo = '';
+      window.Store.saveSettings(settings);
+      this.updateLogoDisplays('');
+      
+      if (window.BookingPortal) {
+        window.BookingPortal.render();
+      }
+
+      window.showToast('Foto da logo removida.', 'success');
     }
   }
 
-  saveBusinessProfile() {
-    let settings = window.Store.getSettings();
-    const name = document.getElementById('settingBusinessName').value;
-    const phone = document.getElementById('settingBusinessPhone').value;
-    const address = document.getElementById('settingBusinessAddress').value;
+  updateLogoDisplays(logoBase64) {
+    // Preview no Form de Configurações
+    const previewImg = document.getElementById('settingsLogoPreviewImg');
+    const placeholderIcon = document.getElementById('settingsLogoPlaceholder');
+    const removeBtn = document.getElementById('btnRemoveLogo');
 
-    const imgElem = document.getElementById('settingsLogoPreviewImg');
-    const logoBase64 = imgElem && !imgElem.classList.contains('hidden') ? imgElem.src : '';
+    if (logoBase64) {
+      if (previewImg) { previewImg.src = logoBase64; previewImg.classList.remove('hidden'); }
+      if (placeholderIcon) placeholderIcon.classList.add('hidden');
+      if (removeBtn) removeBtn.classList.remove('hidden');
+    } else {
+      if (previewImg) previewImg.classList.add('hidden');
+      if (placeholderIcon) placeholderIcon.classList.remove('hidden');
+      if (removeBtn) removeBtn.classList.add('hidden');
+    }
 
-    settings.businessName = name;
-    settings.businessPhone = phone;
-    settings.businessAddress = address;
-    settings.businessLogo = logoBase64;
+    // Logo no Sidebar (Menu Lateral)
+    const sidebarLogoImg = document.getElementById('sidebarLogoImg');
+    const sidebarPlaceholder = document.getElementById('logoPlaceholder');
+
+    if (sidebarLogoImg && sidebarPlaceholder) {
+      if (logoBase64) {
+        sidebarLogoImg.src = logoBase64;
+        sidebarLogoImg.classList.remove('hidden');
+        sidebarPlaceholder.classList.add('hidden');
+      } else {
+        sidebarLogoImg.classList.add('hidden');
+        sidebarPlaceholder.classList.remove('hidden');
+      }
+    }
+
+    // Logo no Header Mobile
+    const mobileHeaderLogoImg = document.getElementById('mobileHeaderLogoImg');
+    if (mobileHeaderLogoImg) {
+      if (logoBase64) {
+        mobileHeaderLogoImg.src = logoBase64;
+        mobileHeaderLogoImg.classList.remove('hidden');
+      } else {
+        mobileHeaderLogoImg.classList.add('hidden');
+      }
+    }
+
+    // Logo no Portal do Cliente Simulador
+    const portalLogoImg = document.getElementById('portalLogoImg');
+    if (portalLogoImg) {
+      if (logoBase64) {
+        portalLogoImg.src = logoBase64;
+        portalLogoImg.classList.remove('hidden');
+      } else {
+        portalLogoImg.classList.add('hidden');
+      }
+    }
+  }
+
+  saveBusinessData() {
+    const settings = window.Store.getSettings() || {};
+    settings.businessName = document.getElementById('settingBusinessName')?.value;
+    settings.businessPhone = document.getElementById('settingBusinessPhone')?.value;
+    settings.businessAddress = document.getElementById('settingBusinessAddress')?.value;
 
     window.Store.saveSettings(settings);
 
-    const brandDisplay = document.getElementById('brandNameDisplay');
-    if (brandDisplay) brandDisplay.textContent = name || 'Simples Agenda Pro';
+    const brandNameDisplay = document.getElementById('brandNameDisplay');
+    if (brandNameDisplay) brandNameDisplay.textContent = settings.businessName || 'Simples Agenda Pro';
 
-    window.showToast('Perfil do negócio e logo salvos com sucesso!', 'success');
+    if (window.BookingPortal) {
+      window.BookingPortal.render();
+    }
+
+    window.showToast('Dados da empresa salvos com sucesso!', 'success');
   }
 
   saveWhatsAppTemplates() {
-    let settings = window.Store.getSettings();
-    if (!settings.whatsappTemplates) settings.whatsappTemplates = {};
-
-    settings.whatsappTemplates.created = document.getElementById('settingMsgCreated').value;
-    settings.whatsappTemplates.reminder = document.getElementById('settingMsgReminder').value;
-    settings.whatsappTemplates.birthday = document.getElementById('settingMsgBirthday').value;
+    const settings = window.Store.getSettings() || {};
+    settings.whatsappTemplates = {
+      created: document.getElementById('settingMsgCreated')?.value,
+      reminder: document.getElementById('settingMsgReminder')?.value,
+      birthday: document.getElementById('settingMsgBirthday')?.value
+    };
 
     window.Store.saveSettings(settings);
-    window.showToast('Modelos de mensagem do WhatsApp salvos!', 'success');
+    window.showToast('Modelos de mensagem de WhatsApp salvos!', 'success');
   }
 
-  exportBackupJSON() {
+  exportBackup() {
     const data = {
       settings: window.Store.getSettings(),
       clients: window.Store.getClients(),
@@ -141,18 +223,20 @@ class SettingsView {
       transactions: window.Store.getTransactions()
     };
 
-    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+    const jsonStr = JSON.stringify(data, null, 2);
+    const blob = new Blob([jsonStr], { type: 'application/json' });
     const url = URL.createObjectURL(blob);
+
     const a = document.createElement('a');
     a.href = url;
-    a.download = `backup_simples_agenda_${new Date().toISOString().split('T')[0]}.json`;
+    a.download = `simples_agenda_backup_${new Date().toISOString().split('T')[0]}.json`;
     a.click();
-    URL.revokeObjectURL(url);
 
+    URL.revokeObjectURL(url);
     window.showToast('Backup exportado com sucesso!', 'success');
   }
 
-  importBackupJSON(event) {
+  importBackup(event) {
     const file = event.target.files[0];
     if (!file) return;
 
@@ -160,20 +244,32 @@ class SettingsView {
     reader.onload = (e) => {
       try {
         const data = JSON.parse(e.target.result);
-        if (data.settings) window.Store.saveSettings(data.settings);
-        if (data.clients) window.Store.saveClients(data.clients);
-        if (data.services) window.Store.saveServices(data.services);
-        if (data.products) window.Store.saveProducts(data.products);
-        if (data.appointments) window.Store.saveAppointments(data.appointments);
-        if (data.transactions) window.Store.saveTransactions(data.transactions);
+        if (data.settings && data.clients && data.services) {
+          if (data.settings) window.Store.saveSettings(data.settings);
+          if (data.clients) window.Store.saveClients(data.clients);
+          if (data.services) window.Store.saveServices(data.services);
+          if (data.products) window.Store.saveProducts(data.products);
+          if (data.appointments) window.Store.saveAppointments(data.appointments);
+          if (data.transactions) window.Store.saveTransactions(data.transactions);
 
-        window.showToast('Backup restaurado com sucesso!', 'success');
-        setTimeout(() => window.location.reload(), 1000);
+          window.showToast('Backup importado com sucesso! Recarregando...', 'success');
+          setTimeout(() => location.reload(), 1200);
+        } else {
+          window.showToast('Arquivo JSON de backup inválido.', 'danger');
+        }
       } catch (err) {
-        window.showToast('Arquivo de backup inválido.', 'warning');
+        window.showToast('Erro ao ler arquivo de backup.', 'danger');
       }
     };
     reader.readAsText(file);
+  }
+
+  resetData() {
+    if (confirm('ATENÇÃO: Deseja apagar todos os dados e restaurar as configurações de fábrica?')) {
+      window.Store.resetAllData();
+      window.showToast('Dados restaurados para o padrão. Recarregando...', 'warning');
+      setTimeout(() => location.reload(), 1000);
+    }
   }
 }
 

@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>Simples Agenda Pro - Sistema Comercial de Gestão & Agendamentos</title>
-  <meta name="description" content="Sistema completo de gestão de agendamentos, clientes, estoque e financeiro com aviso automático por WhatsApp para celular, tablet e computador.">
+  <meta name="description" content="Sistema completo de gestão de agendamentos, clientes, estoque, equipe e financeiro com comissões automáticas e WhatsApp.">
   
   <!-- Fontes Google -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -49,7 +49,10 @@
         <button class="nav-item" data-tab="clients">
           <i data-lucide="users"></i>
           <span>Clientes</span>
-          <span class="badge badge-warning hidden" id="birthdayBadge">0</span>
+        </button>
+        <button class="nav-item" data-tab="employees">
+          <i data-lucide="user-check"></i>
+          <span>Funcionários & Comissões</span>
         </button>
         <button class="nav-item" data-tab="services">
           <i data-lucide="scissors"></i>
@@ -77,6 +80,12 @@
       </nav>
 
       <div class="sidebar-footer">
+        <!-- Botão da Calculadora Comercial no Menu Lateral -->
+        <button class="btn btn-outline w-full" id="btnOpenCalculator" style="border-color:rgba(255,255,255,0.3); color:#FFFFFF; margin-bottom:0.5rem">
+          <i data-lucide="calculator"></i>
+          <span>🧮 Calculadora</span>
+        </button>
+
         <div class="quick-action-box">
           <button class="btn btn-whatsapp w-full" id="btnQuickWhatsAppMsg">
             <i data-lucide="message-circle"></i>
@@ -97,7 +106,7 @@
 
     <!-- Main Content Area -->
     <main class="main-wrapper">
-      <!-- Top Header Mobile & Desktop com Pesquisa Centralizada -->
+      <!-- Top Header Mobile & Desktop com Pesquisa, Alertas Vencidos e Botão de Testar Som -->
       <header class="top-header">
         <div class="header-left">
           <button class="mobile-menu-btn" id="mobileMenuBtn">
@@ -118,13 +127,22 @@
         </div>
 
         <div class="header-actions">
-          <button class="btn btn-outline btn-sm hidden-mobile" id="btnQuickAddClient">
-            <i data-lucide="user-plus"></i>
-            <span>+ Cliente</span>
+          <!-- BOTÃO DA CENTRAL DE ALERTAS & COMPROMISSOS VENCIDOS -->
+          <button class="btn btn-outline btn-sm position-relative" id="btnAlertCenterToggle" style="border-color:var(--accent-orange); color:var(--accent-orange)">
+            <i data-lucide="bell" style="color:var(--accent-orange)"></i>
+            <span>Alertas & Vencimentos</span>
+            <span class="badge badge-danger" id="alertCenterCounterBadge" style="margin-left:4px">0</span>
           </button>
+
+          <!-- Botão de Teste de Som BIP de Aviso -->
+          <button class="btn btn-light btn-sm" id="btnTestSound" title="Clique para Ativar e Testar o Som de Bip">
+            <i data-lucide="volume-2" style="color:var(--accent-orange)"></i>
+            <span>🔔 Som Bip</span>
+          </button>
+
           <button class="btn btn-orange btn-sm" id="btnQuickAddAppointment">
             <i data-lucide="plus"></i>
-            <span>+ Novo Agendamento</span>
+            <span>+ Agendamento</span>
           </button>
         </div>
       </header>
@@ -134,34 +152,23 @@
         
         <!-- TAB 1: AGENDA -->
         <section class="tab-pane active" id="tab-agenda">
-          
-          <!-- Top Dashboard Cards -->
           <div class="metrics-grid">
-            <div class="metric-card">
+            <div class="metric-card" style="border-left:5px solid var(--primary)">
               <div class="metric-info">
                 <span>Agendamentos Hoje</span>
                 <h3 id="metricTodayCount">3 Atendimentos</h3>
               </div>
-              <div class="metric-icon-box metric-blue">
-                <i data-lucide="calendar"></i>
-              </div>
             </div>
-            <div class="metric-card">
+            <div class="metric-card" style="border-left:5px solid var(--accent-orange)">
               <div class="metric-info">
                 <span>Confirmados</span>
                 <h3 id="metricConfirmedCount">2 Confirmados</h3>
               </div>
-              <div class="metric-icon-box metric-orange">
-                <i data-lucide="check-circle-2"></i>
-              </div>
             </div>
-            <div class="metric-card">
+            <div class="metric-card" style="border-left:5px solid var(--success)">
               <div class="metric-info">
                 <span>Faturamento Previsto</span>
                 <h3 id="metricPrevRevenue">R$ 205,00</h3>
-              </div>
-              <div class="metric-icon-box metric-green">
-                <i data-lucide="trending-up"></i>
               </div>
             </div>
           </div>
@@ -190,18 +197,16 @@
             </div>
           </div>
 
-          <!-- Lembrete Rápido Bar -->
           <div class="reminder-alert-bar" id="upcomingReminderBar">
             <div class="reminder-alert-info">
               <i data-lucide="bell" class="bell-ring-icon"></i>
-              <span>Lembretes de Agendamento automáticos via WhatsApp prontos para envio!</span>
+              <span>Aviso Sonoro (Bip) Ativo! O sistema emitirá um sinal audível a cada novo agendamento.</span>
             </div>
             <button class="btn btn-whatsapp btn-xs" id="btnSendAllReminders">
               <i data-lucide="send"></i> Disparar Lembretes WA
             </button>
           </div>
 
-          <!-- Agenda Content Containers -->
           <div class="agenda-container" id="agendaViewContainer">
             <!-- Renderizado dinamicamente via JS -->
           </div>
@@ -212,74 +217,107 @@
           <div class="section-header-bar">
             <div class="search-box">
               <i data-lucide="search"></i>
-              <input type="text" id="clientSearchInput" placeholder="Filtrar clientes por nome, telefone ou anamnese...">
+              <input type="text" id="clientSearchInput" placeholder="Filtrar por nome, telefone, empresa ou cidade...">
             </div>
             <button class="btn btn-orange" id="btnAddClientModal">
               <i data-lucide="user-plus"></i> Novo Cliente
             </button>
           </div>
 
-          <div class="birthdays-card hidden margin-top" id="birthdayAlertSection">
-            <div class="birthday-card-header">
-              <i data-lucide="cake" class="cake-icon"></i>
-              <h3>Aniversariantes deste Mês!</h3>
+          <div class="clients-grid" id="clientsGrid"></div>
+        </section>
+
+        <!-- TAB NOVO: FUNCIONÁRIOS & CÁLCULO DE COMISSÕES -->
+        <section class="tab-pane" id="tab-employees">
+          <div class="metrics-grid">
+            <div class="metric-card" style="border-left:5px solid var(--primary)">
+              <div class="metric-info">
+                <span>Equipe Cadastrada</span>
+                <h3 id="metricTotalEmployees">0 Profissionais</h3>
+              </div>
             </div>
-            <div class="birthday-list" id="birthdayListContainer"></div>
+            <div class="metric-card" style="border-left:5px solid var(--success)">
+              <div class="metric-info">
+                <span>Total de Comissões Acumuladas</span>
+                <h3 id="metricTotalCommissions" style="color:var(--success)">R$ 0,00</h3>
+              </div>
+            </div>
           </div>
 
-          <div class="clients-grid" id="clientsGrid">
-            <!-- Lista de clientes renderizada aqui -->
+          <div class="section-header-bar">
+            <div class="search-box">
+              <i data-lucide="search"></i>
+              <input type="text" id="employeeSearchInput" placeholder="Filtrar funcionário por nome ou cargo...">
+            </div>
+            <button class="btn btn-orange" id="btnAddEmployeeModal">
+              <i data-lucide="user-plus"></i> + Cadastrar Novo Funcionário
+            </button>
+          </div>
+
+          <div class="clients-grid" id="employeesGrid">
+            <!-- Lista de funcionários renderizada aqui -->
           </div>
         </section>
 
-        <!-- TAB 3: SERVIÇOS & ESTOQUE -->
+        <!-- TAB 3: SERVIÇOS & ESTOQUE DE PRODUTOS -->
         <section class="tab-pane" id="tab-services">
           <div class="sub-tabs-header">
-            <button class="sub-tab-btn active" data-subtab="services-list">Catálogo de Serviços</button>
+            <button class="sub-tab-btn active" data-subtab="services-list">💇 Catálogo de Serviços</button>
             <button class="sub-tab-btn" data-subtab="products-list">📦 Controle de Estoque de Produtos</button>
           </div>
 
-          <!-- Subtab Serviços -->
           <div class="subtab-pane active" id="subtab-services-list">
+            <div class="metrics-grid">
+              <div class="metric-card" style="border-left:5px solid var(--primary)">
+                <div class="metric-info">
+                  <span>Catálogo de Serviços</span>
+                  <h3 id="metricTotalServicesCount">0 Serviços</h3>
+                </div>
+              </div>
+              <div class="metric-card" style="border-left:5px solid var(--success)">
+                <div class="metric-info">
+                  <span>Preço Médio por Serviço</span>
+                  <h3 id="metricAvgServicePrice">R$ 0,00</h3>
+                </div>
+              </div>
+              <div class="metric-card" style="border-left:5px solid var(--accent-orange)">
+                <div class="metric-info">
+                  <span>Duração Média</span>
+                  <h3 id="metricAvgServiceDuration">0 min</h3>
+                </div>
+              </div>
+            </div>
+
             <div class="section-header-bar">
-              <p class="text-muted">Cadastre seus serviços com duração, valor e cor personalizada para a agenda.</p>
+              <div class="search-box">
+                <i data-lucide="search"></i>
+                <input type="text" id="serviceSearchInput" placeholder="Pesquisar serviço por nome...">
+              </div>
               <button class="btn btn-orange" id="btnAddServiceModal">
-                <i data-lucide="plus"></i> Novo Serviço
+                <i data-lucide="plus"></i> + Cadastrar Novo Serviço
               </button>
             </div>
             <div class="services-grid" id="servicesGrid"></div>
           </div>
 
-          <!-- Subtab Produtos / Controle de Estoque Monitorado -->
           <div class="subtab-pane" id="subtab-products-list">
-            
-            <!-- Cards de Monitoramento de Estoque -->
             <div class="metrics-grid">
-              <div class="metric-card">
+              <div class="metric-card" style="border-left:5px solid var(--primary)">
                 <div class="metric-info">
                   <span>Total de Produtos</span>
                   <h3 id="metricTotalProducts">0 Itens</h3>
                 </div>
-                <div class="metric-icon-box metric-blue">
-                  <i data-lucide="package"></i>
-                </div>
               </div>
-              <div class="metric-card">
+              <div class="metric-card" style="border-left:5px solid var(--danger)">
                 <div class="metric-info">
                   <span>Alerta de Estoque Baixo</span>
                   <h3 id="metricLowStockCount" style="color:var(--danger)">0 Produtos</h3>
                 </div>
-                <div class="metric-icon-box metric-orange">
-                  <i data-lucide="alert-triangle"></i>
-                </div>
               </div>
-              <div class="metric-card">
+              <div class="metric-card" style="border-left:5px solid var(--success)">
                 <div class="metric-info">
-                  <span>Valor do Estoque</span>
+                  <span>Valor Total do Estoque</span>
                   <h3 id="metricTotalStockValue">R$ 0,00</h3>
-                </div>
-                <div class="metric-icon-box metric-green">
-                  <i data-lucide="dollar-sign"></i>
                 </div>
               </div>
             </div>
@@ -318,7 +356,7 @@
             <div class="finance-card balance-pending">
               <div class="finance-icon" style="background:#FFF7ED; color:#EA580C"><i data-lucide="clock"></i></div>
               <div class="finance-details">
-                <span class="finance-label">Contas A Receber / A Pagar (Pendentes)</span>
+                <span class="finance-label">Contas Pendentes (A Pagar / Receber)</span>
                 <h3 class="finance-value" id="financePendingTotal" style="color:var(--accent-orange)">R$ 0,00</h3>
               </div>
             </div>
@@ -333,6 +371,10 @@
 
           <div class="section-header-bar margin-top">
             <div class="filter-group">
+              <div class="search-box" style="max-width:240px">
+                <i data-lucide="search"></i>
+                <input type="text" id="financeSearchInput" placeholder="Buscar lançamento...">
+              </div>
               <select id="financePeriodFilter" class="form-control-sm">
                 <option value="month">Este Mês</option>
                 <option value="today">Hoje</option>
@@ -391,78 +433,132 @@
           </div>
         </section>
 
-        <!-- TAB 6: PORTAL DO CLIENTE (LINK REAL FUNCIONAL DE VERDADE) -->
+        <!-- TAB 6: PORTAL DO CLIENTE -->
         <section class="tab-pane" id="tab-portal">
-          <div class="portal-preview-banner">
-            <div class="portal-banner-info">
-              <i data-lucide="smartphone" class="banner-icon"></i>
-              <div>
-                <h2>Link de Agendamento Online Público REAL (Funcional)</h2>
-                <p>Seus clientes podem abrir este link no celular para escolher o serviço e o melhor horário direto!</p>
+          <div class="portal-hero-card">
+            <div class="portal-hero-content">
+              <div class="portal-badge-new">
+                <i data-lucide="sparkles"></i> PORTAL DO CLIENTE ONLINE 24H
               </div>
-            </div>
-            <div class="portal-share-box" style="flex-direction:column; align-items:stretch; gap:0.75rem">
-              <input type="text" readonly id="portalLinkInput" value="agendar.html" class="form-control" style="font-weight:700">
-              <div style="display:flex; gap:0.75rem">
-                <button class="btn btn-orange" id="btnOpenRealPortalLink" style="flex:1">
-                  <i data-lucide="external-link"></i> 🚀 Abrir Portal Público (Link Real)
-                </button>
-                <button class="btn btn-whatsapp" id="btnCopyPortalLink" style="flex:1">
-                  <i data-lucide="copy"></i> Copiar Link Real
-                </button>
+              <h2 class="portal-hero-title">Link de Agendamento Público para Seus Clientes</h2>
+              <p class="portal-hero-desc">
+                Seus clientes utilizam este link direto pelo WhatsApp no celular para agendar serviços, escolher profissionais, datas e horários sem precisar te ligar!
+              </p>
+              
+              <div class="portal-link-action-bar margin-top">
+                <div class="portal-url-box">
+                  <i data-lucide="link-2"></i>
+                  <input type="text" readonly id="portalLinkInput" value="agendar.html" class="portal-url-input">
+                </div>
+                <div class="portal-action-btns">
+                  <button class="btn btn-orange" id="btnOpenRealPortalLink">
+                    <i data-lucide="external-link"></i> 🚀 Abrir Portal Público Real
+                  </button>
+                  <button class="btn btn-whatsapp" id="btnCopyPortalLink">
+                    <i data-lucide="copy"></i> Copiar Link para Enviar no WhatsApp
+                  </button>
+                </div>
               </div>
             </div>
           </div>
 
-          <!-- Mock Preview -->
-          <div class="portal-device-frame margin-top">
-            <div class="portal-phone-screen">
-              <div class="portal-header">
-                <img id="portalLogoImg" src="" alt="Logo" class="portal-logo hidden">
-                <h3 id="portalCompanyName">Minha Empresa</h3>
-                <p class="portal-subtitle">Prévia da página de agendamento do cliente</p>
+          <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap:1.25rem" class="margin-top">
+            <div class="card" style="padding:1.25rem; display:flex; align-items:center; gap:1rem; border-left:5px solid #0EA5E9">
+              <div style="width:44px; height:44px; border-radius:12px; background:#E0F2FE; color:#0284C7; display:flex; align-items:center; justify-content:center; flex-shrink:0">
+                <i data-lucide="clock" style="width:24px; height:24px"></i>
               </div>
-              <div class="portal-step-body" id="portalStepBody">
-                <!-- Conteúdo interativo da simulação do agendamento -->
+              <div>
+                <h4 style="font-weight:800; font-size:1rem; color:var(--text-main)">Autoagendamento 24h/7d</h4>
+                <p class="text-muted" style="font-size:0.8rem">Agendamentos automáticos a qualquer hora do dia ou da noite.</p>
+              </div>
+            </div>
+
+            <div class="card" style="padding:1.25rem; display:flex; align-items:center; gap:1rem; border-left:5px solid #10B981">
+              <div style="width:44px; height:44px; border-radius:12px; background:#D1FAE5; color:#047857; display:flex; align-items:center; justify-content:center; flex-shrink:0">
+                <i data-lucide="bell-ring" style="width:24px; height:24px"></i>
+              </div>
+              <div>
+                <h4 style="font-weight:800; font-size:1rem; color:var(--text-main)">Bip Sonoro Automático</h4>
+                <p class="text-muted" style="font-size:0.8rem">O sistema emite um som audível assim que o cliente confirma.</p>
+              </div>
+            </div>
+
+            <div class="card" style="padding:1.25rem; display:flex; align-items:center; gap:1rem; border-left:5px solid #F97316">
+              <div style="width:44px; height:44px; border-radius:12px; background:#FFF7ED; color:#EA580C; display:flex; align-items:center; justify-content:center; flex-shrink:0">
+                <i data-lucide="message-circle" style="width:24px; height:24px"></i>
+              </div>
+              <div>
+                <h4 style="font-weight:800; font-size:1rem; color:var(--text-main)">Confirmação no WhatsApp</h4>
+                <p class="text-muted" style="font-size:0.8rem">Envia o comprovante e lembrete direto no celular do cliente.</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="portal-simulation-wrapper margin-top">
+            <div class="simulation-title-bar">
+              <i data-lucide="smartphone"></i>
+              <h3>Simulação Interativa do Portal no Celular</h3>
+              <span class="badge badge-success">🟢 Agendamento Ativo</span>
+            </div>
+
+            <div class="portal-device-frame">
+              <div class="portal-phone-notch"></div>
+              <div class="portal-phone-screen">
+                <div class="portal-header">
+                  <img id="portalLogoImg" src="" alt="Logo" class="portal-logo hidden">
+                  <h3 id="portalCompanyName">Minha Empresa</h3>
+                  <div class="portal-stars">⭐⭐⭐⭐⭐ <span>(248 avaliações)</span></div>
+                </div>
+
+                <div class="portal-step-bar">
+                  <span id="pStep1" class="active">1. Serviço</span>
+                  <span id="pStep2">2. Horário</span>
+                  <span id="pStep3">3. Dados</span>
+                </div>
+
+                <div class="portal-step-body" id="portalStepBody">
+                  <!-- Conteúdo interativo da simulação do agendamento -->
+                </div>
               </div>
             </div>
           </div>
         </section>
 
-        <!-- TAB 7: CONFIGURAÇÕES -->
+        <!-- TAB 7: CONFIGURAÇÕES DO SISTEMA -->
         <section class="tab-pane" id="tab-settings">
-          <div class="settings-layout">
+          <div class="settings-modern-grid">
             <div class="settings-card">
               <div class="card-header-icon">
-                <i data-lucide="store"></i>
+                <div class="card-icon-wrapper metric-blue">
+                  <i data-lucide="store"></i>
+                </div>
                 <div>
-                  <h3>Perfil do Seu Negócio & Logo</h3>
-                  <p class="text-muted">Personalize os dados e a marca que aparecem nos comprovantes e no sistema.</p>
+                  <h3>Perfil do Estabelecimento & Logo</h3>
+                  <p class="text-muted">Personalize os dados da sua empresa e a marca que aparece nos comprovantes.</p>
                 </div>
               </div>
 
-              <form id="settingsBusinessForm" class="settings-form">
-                <!-- Upload de Logo -->
+              <form id="settingsBusinessForm" class="settings-form margin-top">
                 <div class="logo-upload-container">
-                  <label class="form-label">Foto da Logo da Empresa</label>
+                  <label class="form-label">Foto / Marca da Logo da Empresa</label>
                   <div class="logo-preview-box">
                     <div class="logo-preview-img-wrapper" id="settingsLogoPreviewWrapper">
                       <i data-lucide="image" id="settingsLogoPlaceholder"></i>
                       <img id="settingsLogoPreviewImg" src="" alt="Preview Logo" class="hidden">
                     </div>
                     <div class="logo-upload-actions">
-                      <label for="logoFileInput" class="btn btn-outline btn-sm">
-                        <i data-lucide="upload"></i> Escolher Foto / Logo
+                      <label for="logoFileInput" class="btn btn-primary btn-sm">
+                        <i data-lucide="upload"></i> Carregar Nova Logo
                       </label>
                       <input type="file" id="logoFileInput" accept="image/*" class="hidden">
                       <button type="button" class="btn btn-danger-outline btn-sm hidden" id="btnRemoveLogo">
-                        <i data-lucide="trash-2"></i> Remover Logo
+                        <i data-lucide="trash-2"></i> Remover Foto
                       </button>
                     </div>
                   </div>
                 </div>
 
-                <div class="form-grid">
+                <div class="form-grid margin-top">
                   <div class="form-group">
                     <label class="form-label">Nome do Estabelecimento / Profissional *</label>
                     <input type="text" id="settingBusinessName" class="form-control" required placeholder="Ex: Barbearia VIP / Clínica Espaço Saúde">
@@ -478,23 +574,24 @@
                 </div>
 
                 <button type="submit" class="btn btn-orange margin-top">
-                  <i data-lucide="save"></i> Salvar Dados do Negócio
+                  <i data-lucide="save"></i> Salvar Dados da Empresa
                 </button>
               </form>
             </div>
 
-            <!-- Configuração de Mensagens de WhatsApp -->
             <div class="settings-card">
               <div class="card-header-icon">
-                <i data-lucide="message-square"></i>
+                <div class="card-icon-wrapper metric-orange">
+                  <i data-lucide="message-square"></i>
+                </div>
                 <div>
                   <h3>Mensagens de Lembrete via WhatsApp</h3>
-                  <p class="text-muted">Personalize os modelos de texto enviados para os seus clientes com tags automáticas.</p>
+                  <p class="text-muted">Personalize os modelos de texto enviados para os clientes com tags inteligentes.</p>
                 </div>
               </div>
 
-              <div class="tags-helper">
-                <strong>Tags disponíveis:</strong>
+              <div class="tags-helper margin-top">
+                <strong>Tags automáticas:</strong>
                 <span class="tag-chip">{cliente}</span>
                 <span class="tag-chip">{servico}</span>
                 <span class="tag-chip">{data}</span>
@@ -518,31 +615,32 @@
                 </div>
 
                 <button type="submit" class="btn btn-orange margin-top">
-                  <i data-lucide="save"></i> Salvar Modelos de Mensagem
+                  <i data-lucide="save"></i> Salvar Modelos de WhatsApp
                 </button>
               </form>
             </div>
 
-            <!-- Backup & Dados -->
             <div class="settings-card">
               <div class="card-header-icon">
-                <i data-lucide="database"></i>
+                <div class="card-icon-wrapper metric-green">
+                  <i data-lucide="shield-check"></i>
+                </div>
                 <div>
-                  <h3>Backup e Restauração de Dados</h3>
-                  <p class="text-muted">Faça backup de segurança dos seus dados em arquivo JSON ou restaure em outro aparelho.</p>
+                  <h3>Backup e Segurança dos Dados</h3>
+                  <p class="text-muted">Baixe um backup em arquivo JSON ou restaure seus dados em outro computador ou celular.</p>
                 </div>
               </div>
 
-              <div class="backup-actions margin-top">
-                <button class="btn btn-outline" id="btnExportBackup">
-                  <i data-lucide="download"></i> Baixar Backup de Dados (JSON)
+              <div class="backup-actions margin-top" style="display:flex; flex-direction:column; gap:0.85rem">
+                <button class="btn btn-outline w-full" id="btnExportBackup">
+                  <i data-lucide="download"></i> Baixar Backup Completo dos Dados (JSON)
                 </button>
-                <label for="importBackupInput" class="btn btn-outline">
-                  <i data-lucide="upload-cloud"></i> Importar Backup
+                <label for="importBackupInput" class="btn btn-outline w-full">
+                  <i data-lucide="upload-cloud"></i> Restaurar / Importar Backup
                 </label>
                 <input type="file" id="importBackupInput" accept=".json" class="hidden">
-                <button class="btn btn-danger-outline" id="btnResetData">
-                  <i data-lucide="refresh-cw"></i> Resetar Dados para Padrão
+                <button class="btn btn-danger-outline w-full" id="btnResetData" style="margin-top:0.5rem">
+                  <i data-lucide="refresh-cw"></i> Resetar Dados para o Padrão de Fábrica
                 </button>
               </div>
             </div>
@@ -568,9 +666,9 @@
           <i data-lucide="plus"></i>
         </div>
       </button>
-      <button class="mobile-nav-item" data-tab="services">
-        <i data-lucide="scissors"></i>
-        <span>Serviços</span>
+      <button class="mobile-nav-item" data-tab="employees">
+        <i data-lucide="user-check"></i>
+        <span>Equipe</span>
       </button>
       <button class="mobile-nav-item" data-tab="finance">
         <i data-lucide="dollar-sign"></i>
@@ -581,7 +679,141 @@
 
   <!-- MODAIS DO SISTEMA -->
 
-  <!-- Modal 1: Novo / Editar Agendamento -->
+  <!-- MODAL CALCULADORA COMERCIAL MODERNA CLARA (LIGHT DESIGN) -->
+  <div class="modal-overlay" id="modalCalculator">
+    <div class="modal-container" style="max-width:340px; border-radius:24px; background:#FFFFFF; box-shadow:0 20px 40px rgba(0,0,0,0.15)">
+      <div class="modal-header" style="background:linear-gradient(135deg, #0284C7 0%, #0EA5E9 100%); color:#FFF; padding:1.1rem 1.25rem">
+        <div style="display:flex; align-items:center; gap:0.5rem">
+          <i data-lucide="calculator" style="width:20px; height:20px; color:#FFF"></i>
+          <h3 style="color:#FFF; font-size:1.05rem; font-weight:800">Calculadora Comercial</h3>
+        </div>
+        <button class="icon-btn close-modal" style="color:#FFF; border-color:transparent; background:rgba(255,255,255,0.2)"><i data-lucide="x"></i></button>
+      </div>
+
+      <div class="modal-body" style="padding:1.25rem 1rem; background:#FFFFFF; color:#0F172A">
+        <div style="text-align:right; margin-bottom:1rem; padding:0.85rem; background:#F8FAFC; border-radius:14px; border:1px solid #E2E8F0">
+          <div id="calcSubDisplay" style="font-size:0.8rem; color:#64748B; min-height:18px; font-weight:600"></div>
+          <div id="calcMainDisplay" style="font-size:1.9rem; font-weight:800; color:#0284C7; overflow-x:auto">0</div>
+        </div>
+
+        <div style="display:grid; grid-template-columns:repeat(4, 1fr); gap:0.5rem">
+          <button class="calc-btn btn btn-sm" data-action="clear" style="background:#FEE2E2; color:#EF4444; border:1px solid #FCA5A5; font-weight:800">C</button>
+          <button class="calc-btn btn btn-sm" data-action="backspace" style="background:#F1F5F9; color:#0F172A; border:1px solid #E2E8F0">⌫</button>
+          <button class="calc-btn btn btn-sm" data-action="percent" style="background:#E0F2FE; color:#0284C7; border:1px solid #7DD3FC; font-weight:800">%</button>
+          <button class="calc-btn btn btn-sm" data-action="/" style="background:#E0F2FE; color:#0284C7; border:1px solid #7DD3FC; font-weight:800">÷</button>
+
+          <button class="calc-btn btn btn-sm" data-val="7" style="background:#F1F5F9; color:#0F172A; border:1px solid #E2E8F0; font-weight:700">7</button>
+          <button class="calc-btn btn btn-sm" data-val="8" style="background:#F1F5F9; color:#0F172A; border:1px solid #E2E8F0; font-weight:700">8</button>
+          <button class="calc-btn btn btn-sm" data-val="9" style="background:#F1F5F9; color:#0F172A; border:1px solid #E2E8F0; font-weight:700">9</button>
+          <button class="calc-btn btn btn-sm" data-action="*" style="background:#E0F2FE; color:#0284C7; border:1px solid #7DD3FC; font-weight:800">×</button>
+
+          <button class="calc-btn btn btn-sm" data-val="4" style="background:#F1F5F9; color:#0F172A; border:1px solid #E2E8F0; font-weight:700">4</button>
+          <button class="calc-btn btn btn-sm" data-val="5" style="background:#F1F5F9; color:#0F172A; border:1px solid #E2E8F0; font-weight:700">5</button>
+          <button class="calc-btn btn btn-sm" data-val="6" style="background:#F1F5F9; color:#0F172A; border:1px solid #E2E8F0; font-weight:700">6</button>
+          <button class="calc-btn btn btn-sm" data-action="-" style="background:#E0F2FE; color:#0284C7; border:1px solid #7DD3FC; font-weight:800">-</button>
+
+          <button class="calc-btn btn btn-sm" data-val="1" style="background:#F1F5F9; color:#0F172A; border:1px solid #E2E8F0; font-weight:700">1</button>
+          <button class="calc-btn btn btn-sm" data-val="2" style="background:#F1F5F9; color:#0F172A; border:1px solid #E2E8F0; font-weight:700">2</button>
+          <button class="calc-btn btn btn-sm" data-val="3" style="background:#F1F5F9; color:#0F172A; border:1px solid #E2E8F0; font-weight:700">3</button>
+          <button class="calc-btn btn btn-sm" data-action="+" style="background:#E0F2FE; color:#0284C7; border:1px solid #7DD3FC; font-weight:800">+</button>
+
+          <button class="calc-btn btn btn-sm" data-val="0" style="grid-column: span 2; background:#F1F5F9; color:#0F172A; border:1px solid #E2E8F0; font-weight:700">0</button>
+          <button class="calc-btn btn btn-sm" data-val="." style="background:#F1F5F9; color:#0F172A; border:1px solid #E2E8F0; font-weight:700">,</button>
+          <button class="calc-btn btn btn-orange btn-sm" data-action="eval" style="font-weight:800; font-size:1.1rem">=</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL NOVO / EDITAR FUNCIONÁRIO -->
+  <div class="modal-overlay" id="modalEmployee">
+    <div class="modal-container">
+      <div class="modal-header">
+        <h3 id="modalEmployeeTitle">Novo Funcionário</h3>
+        <button class="icon-btn close-modal"><i data-lucide="x"></i></button>
+      </div>
+      <form id="formEmployee" class="modal-body">
+        <input type="hidden" id="empId">
+
+        <div class="form-group">
+          <label class="form-label">Nome Completo do Funcionário *</label>
+          <input type="text" id="empName" class="form-control" required placeholder="Ex: Alexandre Silva">
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Cargo / Função *</label>
+            <input type="text" id="empRole" class="form-control" placeholder="Ex: Barbeiro / Esteticista / Manicure">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Telefone / WhatsApp</label>
+            <input type="tel" id="empPhone" class="form-control" placeholder="(11) 99999-9999">
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Dias de Trabalho</label>
+            <input type="text" id="empWorkDays" class="form-control" placeholder="Ex: Segunda a Sábado">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Horário de Trabalho</label>
+            <input type="text" id="empWorkHours" class="form-control" placeholder="Ex: 08:00 às 18:00">
+          </div>
+        </div>
+
+        <div class="form-group" style="background:var(--accent-orange-light); padding:0.85rem; border-radius:var(--radius-md)">
+          <label class="form-label" style="color:#C2410C">💰 Porcentagem de Comissão Opcional (%)</label>
+          <div style="display:flex; align-items:center; gap:0.5rem">
+            <input type="number" id="empCommissionRate" class="form-control" placeholder="50" min="0" max="100" value="50">
+            <span style="font-weight:800; font-size:1.1rem; color:var(--accent-orange)">%</span>
+          </div>
+          <span class="text-muted" style="font-size:0.75rem; margin-top:2px">O sistema somará automaticamente a comissão deste funcionário em cada atendimento concluído.</span>
+        </div>
+
+        <div class="modal-footer">
+          <button type="button" class="btn btn-light close-modal">Cancelar</button>
+          <button type="submit" class="btn btn-orange">
+            <i data-lucide="check"></i> Salvar Funcionário
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- MODAL 0: CENTRAL DE ALERTAS & COMPROMISSOS VENCIDOS -->
+  <div class="modal-overlay" id="modalAlertCenter">
+    <div class="modal-container" style="max-width:580px; border-top:6px solid var(--accent-orange)">
+      <div class="modal-header" style="background:#FFF7ED; color:#C2410C">
+        <div style="display:flex; align-items:center; gap:0.6rem">
+          <i data-lucide="bell" style="width:24px; height:24px; color:#EA580C"></i>
+          <h3 style="font-weight:800; color:#C2410C; font-size:1.15rem">Central de Alertas & Vencimentos</h3>
+        </div>
+        <button class="icon-btn close-modal"><i data-lucide="x"></i></button>
+      </div>
+      <div class="modal-body" id="alertCenterModalBody" style="padding:1.25rem 1rem">
+        <!-- Conteúdo dos alertas inserido via JS -->
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL POPUP DE ALERTA DE NOVO AGENDAMENTO RECEBIDO -->
+  <div class="modal-overlay" id="modalNewApptAlert">
+    <div class="modal-container" style="max-width:440px; border-top:6px solid var(--accent-orange)">
+      <div class="modal-header" style="background:#FFF7ED; color:#C2410C">
+        <div style="display:flex; align-items:center; gap:0.6rem">
+          <i data-lucide="bell-ring" style="width:24px; height:24px; color:#EA580C"></i>
+          <h3 style="font-weight:800; color:#C2410C; font-size:1.15rem">NOVO AGENDAMENTO RECEBIDO!</h3>
+        </div>
+        <button class="icon-btn close-modal"><i data-lucide="x"></i></button>
+      </div>
+      <div class="modal-body" id="newApptAlertBody" style="padding:1.25rem 1rem">
+        <!-- Detalhes do agendamento inseridos dinamicamente via JS -->
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal 1: Novo / Editar Agendamento com Seleção de Funcionário -->
   <div class="modal-overlay" id="modalAppointment">
     <div class="modal-container">
       <div class="modal-header">
@@ -603,11 +835,19 @@
           </div>
         </div>
 
-        <div class="form-group">
-          <label class="form-label">Serviço *</label>
-          <select id="apptServiceId" class="form-control" required>
-            <option value="">Selecione o serviço...</option>
-          </select>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Serviço *</label>
+            <select id="apptServiceId" class="form-control" required>
+              <option value="">Selecione o serviço...</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Profissional / Funcionário</label>
+            <select id="apptEmployeeId" class="form-control">
+              <option value="">Selecione quem atenderá...</option>
+            </select>
+          </div>
         </div>
 
         <div class="form-row">
@@ -638,15 +878,34 @@
           </div>
         </div>
 
-        <!-- RECORRÊNCIA DO AGENDAMENTO -->
         <div class="form-group" style="background:var(--primary-light); padding:0.85rem; border-radius:var(--radius-md)">
           <label class="form-label" style="color:var(--primary-hover)">🔄 Repetição / Compromisso Recorrente</label>
           <select id="apptRecurrence" class="form-control">
             <option value="none">❌ Sem Repetição (Agendamento Único)</option>
+            <option value="custom_dates">📅 Escolher Dias Específicos no Calendário (Múltiplas Datas)</option>
             <option value="weekly_4">🔄 Semanal (Toda semana - 4 sessões consecutivas)</option>
             <option value="biweekly_4">🔄 Quinzenal (A cada 15 dias - 4 sessões)</option>
             <option value="monthly_3">🔄 Mensal (Todo mês - 3 sessões consecutivas)</option>
           </select>
+
+          <!-- SELETOR DE CALENDÁRIO INTERATIVO PARA MÚLTIPLAS DATAS -->
+          <div id="recurringCustomDatesWrapper" class="hidden" style="margin-top:0.75rem; background:var(--bg-surface); padding:0.85rem; border-radius:var(--radius-md); border:1px solid var(--border-color)">
+            <label class="form-label" style="font-size:0.825rem; font-weight:800; color:var(--primary-hover); margin-bottom:0.5rem">
+              📅 Escolha os Dias Específicos que Deseja Agendar:
+            </label>
+            <div style="display:flex; gap:0.5rem; margin-bottom:0.75rem">
+              <input type="date" id="customDatePickerInput" class="form-control" style="font-size:0.85rem">
+              <button type="button" class="btn btn-primary btn-sm" id="btnAddCustomDateBtn">
+                + Adicionar Data
+              </button>
+            </div>
+            <div id="selectedCustomDatesList" style="display:flex; flex-wrap:wrap; gap:0.45rem">
+              <!-- Chips de datas selecionadas renderizadas aqui -->
+            </div>
+            <div style="font-size:0.75rem; color:var(--text-muted); margin-top:0.5rem">
+              💡 Dica: Escolha as datas desejadas acima. Ao salvar, o sistema criará os agendamentos automáticos para todos esses dias no mesmo horário!
+            </div>
+          </div>
         </div>
 
         <div class="form-group">
@@ -680,29 +939,29 @@
         <input type="hidden" id="clientId">
         
         <div class="form-group">
-          <label class="form-label">Nome Completo *</label>
-          <input type="text" id="clientName" class="form-control" required placeholder="Ex: Maria Silva">
+          <label class="form-label">Nome Completo do Cliente *</label>
+          <input type="text" id="clientName" class="form-control" required placeholder="Ex: Carlos Eduardo">
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Telefone / WhatsApp *</label>
+          <input type="tel" id="clientPhone" class="form-control" required placeholder="(11) 99999-9999">
         </div>
 
         <div class="form-row">
           <div class="form-group">
-            <label class="form-label">Telefone / WhatsApp *</label>
-            <input type="tel" id="clientPhone" class="form-control" required placeholder="(11) 99999-9999">
+            <label class="form-label">Nome da Empresa do Cliente</label>
+            <input type="text" id="clientCompany" class="form-control" placeholder="Ex: Mercado Silva Ltda">
           </div>
           <div class="form-group">
-            <label class="form-label">Data de Nascimento</label>
-            <input type="date" id="clientBirthDate" class="form-control">
+            <label class="form-label">Nome da Cidade / UF</label>
+            <input type="text" id="clientCity" class="form-control" placeholder="Ex: São Paulo - SP">
           </div>
-        </div>
-
-        <div class="form-group">
-          <label class="form-label">E-mail</label>
-          <input type="email" id="clientEmail" class="form-control" placeholder="cliente@email.com">
         </div>
 
         <div class="form-group">
           <label class="form-label">Ficha de Anamnese / Observações do Cliente</label>
-          <textarea id="clientAnamnesis" rows="3" class="form-control" placeholder="Alergias, histórico médico, preferências de corte, etc..."></textarea>
+          <textarea id="clientAnamnesis" rows="3" class="form-control" placeholder="Alergias, preferências, histórico de atendimento..."></textarea>
         </div>
 
         <div class="modal-footer">
@@ -938,11 +1197,13 @@
   <script src="js/whatsapp.js"></script>
   <script src="js/agenda.js"></script>
   <script src="js/clients.js"></script>
+  <script src="js/employees.js"></script>
   <script src="js/services.js"></script>
   <script src="js/finance.js"></script>
   <script src="js/reports.js"></script>
   <script src="js/booking-portal.js"></script>
   <script src="js/settings.js"></script>
+  <script src="js/calculator.js"></script>
   <script src="js/app.js"></script>
 </body>
 </html>

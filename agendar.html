@@ -42,7 +42,7 @@
     }
 
     .portal-top-header {
-      background: var(--bg-sidebar);
+      background: linear-gradient(135deg, #0284C7 0%, #0EA5E9 100%);
       color: #FFFFFF;
       padding: 1.75rem 1.5rem;
       text-align: center;
@@ -53,12 +53,16 @@
     }
 
     .portal-business-logo {
-      width: 72px;
-      height: 72px;
+      width: 68px;
+      height: 68px;
+      max-width: 68px;
+      max-height: 68px;
       border-radius: var(--radius-md);
-      object-fit: cover;
-      border: 3px solid #FFFFFF;
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+      object-fit: contain;
+      background: #FFFFFF;
+      padding: 4px;
+      border: 2px solid #FFFFFF;
+      box-shadow: 0 4px 14px rgba(0, 0, 0, 0.2);
     }
 
     .portal-business-name {
@@ -70,6 +74,7 @@
     .portal-business-sub {
       font-size: 0.85rem;
       color: #E0F2FE;
+      font-weight: 600;
     }
 
     .step-indicator-bar {
@@ -79,12 +84,13 @@
       border-bottom: 1px solid var(--border-color);
       font-size: 0.85rem;
       font-weight: 700;
-      justify-content: space-between;
+      justify-content: space-around;
       color: var(--text-muted);
     }
 
     .step-indicator-bar span.active {
       color: var(--primary);
+      font-weight: 800;
     }
 
     .portal-content-body {
@@ -111,7 +117,7 @@
     }
 
     .time-slot-btn {
-      padding: 0.6rem;
+      padding: 0.65rem 0.5rem;
       font-size: 0.85rem;
       font-weight: 700;
       border-radius: var(--radius-sm);
@@ -122,11 +128,20 @@
       text-align: center;
     }
 
-    .time-slot-btn:hover, .time-slot-btn.selected {
+    .time-slot-btn:hover:not(:disabled), .time-slot-btn.selected {
       background: var(--primary-gradient);
       color: #FFFFFF;
       border-color: var(--primary);
       box-shadow: 0 4px 10px rgba(14, 165, 233, 0.3);
+    }
+
+    .time-slot-btn:disabled {
+      background: #F1F5F9;
+      color: #94A3B8;
+      border-color: #E2E8F0;
+      cursor: not-allowed;
+      text-decoration: line-through;
+      opacity: 0.7;
     }
   </style>
 </head>
@@ -159,6 +174,38 @@
     let selectedService = null;
     let selectedDate = new Date().toISOString().split('T')[0];
     let selectedTime = null;
+
+    // GERADOR DE SOM BIP DE AVISO
+    function playNotificationBeep() {
+      try {
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        
+        const osc1 = audioCtx.createOscillator();
+        const gain1 = audioCtx.createGain();
+        osc1.type = 'sine';
+        osc1.frequency.setValueAtTime(880, audioCtx.currentTime);
+        osc1.frequency.exponentialRampToValueAtTime(1200, audioCtx.currentTime + 0.12);
+        gain1.gain.setValueAtTime(0.35, audioCtx.currentTime);
+        gain1.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.35);
+        osc1.connect(gain1);
+        gain1.connect(audioCtx.destination);
+        osc1.start();
+        osc1.stop(audioCtx.currentTime + 0.35);
+
+        setTimeout(() => {
+          const osc2 = audioCtx.createOscillator();
+          const gain2 = audioCtx.createGain();
+          osc2.type = 'sine';
+          osc2.frequency.setValueAtTime(1046.5, audioCtx.currentTime);
+          gain2.gain.setValueAtTime(0.4, audioCtx.currentTime);
+          gain2.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.3);
+          osc2.connect(gain2);
+          gain2.connect(audioCtx.destination);
+          osc2.start();
+          osc2.stop(audioCtx.currentTime + 0.3);
+        }, 140);
+      } catch (e) {}
+    }
 
     document.addEventListener('DOMContentLoaded', () => {
       loadBusinessProfile();
@@ -234,6 +281,9 @@
 
     function renderStep2(container) {
       const availableTimes = ['08:00', '09:00', '10:00', '11:00', '14:00', '15:00', '16:00', '17:00', '18:00', '19:00'];
+      
+      const apptsOnDate = window.Store.getAppointments().filter(a => a.date === selectedDate && a.status !== 'cancelled');
+      const occupiedTimes = new Set(apptsOnDate.map(a => a.time));
 
       let html = `
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem">
@@ -255,9 +305,14 @@
       `;
 
       availableTimes.forEach(t => {
+        const isOccupied = occupiedTimes.has(t);
         const isSelected = selectedTime === t;
+        
         html += `
-          <button class="time-slot-btn ${isSelected ? 'selected' : ''}" onclick="selectTime('${t}')">${t}</button>
+          <button class="time-slot-btn ${isSelected ? 'selected' : ''}" 
+                  ${isOccupied ? 'disabled title="Horário Ocupado"' : `onclick="selectTime('${t}')"`}>
+            ${t} ${isOccupied ? '<br><span style="font-size:0.65rem; color:#EF4444">(Ocupado)</span>' : ''}
+          </button>
         `;
       });
 
@@ -266,6 +321,8 @@
 
       document.getElementById('dateSelector').onchange = (e) => {
         selectedDate = e.target.value;
+        selectedTime = null;
+        renderStep2(container);
       };
     }
 
@@ -307,6 +364,17 @@
 
       document.getElementById('publicBookingForm').onsubmit = (e) => {
         e.preventDefault();
+
+        // Validação final de conflito de horário antes de salvar
+        const currentAppts = window.Store.getAppointments();
+        const conflict = currentAppts.find(a => a.date === selectedDate && a.time === selectedTime && a.status !== 'cancelled');
+        if (conflict) {
+          alert(`⚠️ Ops! A data ${selectedDate.split('-').reverse().join('/')} às ${selectedTime} acabou de ser ocupada por outro cliente. Por favor, volte e escolha outro horário.`);
+          currentStep = 2;
+          renderStep();
+          return;
+        }
+
         const name = document.getElementById('custName').value;
         const phone = document.getElementById('custPhone').value;
 
@@ -317,8 +385,8 @@
             id: window.Store.generateId('cli'),
             name,
             phone,
-            email: '',
-            birthDate: '',
+            company: '',
+            city: '',
             anamnesis: 'Cliente agendou via Portal Público Online.'
           };
           clients.push(client);
@@ -336,9 +404,11 @@
           notes: 'Solicitado via Link de Agendamento Online Público'
         };
 
-        const appts = window.Store.getAppointments();
-        appts.push(newAppt);
-        window.Store.saveAppointments(appts);
+        currentAppts.push(newAppt);
+        window.Store.saveAppointments(currentAppts);
+
+        // DISPARAR SOM DE AVISO BIP!
+        playNotificationBeep();
 
         window.lastCreatedAppt = newAppt;
         window.lastClient = client;

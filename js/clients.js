@@ -1,178 +1,122 @@
 /* ==========================================================================
-   SIMPLES AGENDA PRO - CLIENT MANAGEMENT ENGINE
+   SIMPLES AGENDA PRO - CLIENTS CONTROLLER (NOME, TELEFONE, EMPRESA & CIDADE)
    ========================================================================== */
 
-class ClientsView {
-  constructor() {}
+class ClientsController {
+  constructor() {
+    this.gridContainer = null;
+    this.searchInput = null;
+  }
 
   init() {
+    this.gridContainer = document.getElementById('clientsGrid');
+    this.searchInput = document.getElementById('clientSearchInput');
+
     this.bindEvents();
     this.render();
   }
 
   bindEvents() {
-    document.getElementById('clientSearchInput')?.addEventListener('input', (e) => {
-      this.render(e.target.value);
+    document.getElementById('btnAddClientModal')?.addEventListener('click', () => {
+      if (window.App) window.App.openClientModal();
     });
 
-    document.getElementById('btnAddClientModal')?.addEventListener('click', () => {
-      window.App.openClientModal();
+    document.getElementById('btnApptQuickNewClient')?.addEventListener('click', () => {
+      if (window.App) window.App.openClientModal();
+    });
+
+    this.searchInput?.addEventListener('input', (e) => {
+      this.render(e.target.value.toLowerCase().trim());
     });
   }
 
   render(filterQuery = '') {
-    const clients = window.Store.getClients();
-    const container = document.getElementById('clientsGrid');
-    if (!container) return;
+    if (!this.gridContainer) return;
 
-    this.checkBirthdays(clients);
+    let clients = window.Store.getClients();
 
-    const filtered = clients.filter(c => {
-      const query = filterQuery.toLowerCase().trim();
-      return (
-        c.name.toLowerCase().includes(query) ||
-        c.phone.includes(query) ||
-        (c.anamnesis && c.anamnesis.toLowerCase().includes(query))
+    if (filterQuery) {
+      clients = clients.filter(c =>
+        (c.name && c.name.toLowerCase().includes(filterQuery)) ||
+        (c.phone && c.phone.toLowerCase().includes(filterQuery)) ||
+        (c.company && c.company.toLowerCase().includes(filterQuery)) ||
+        (c.city && c.city.toLowerCase().includes(filterQuery))
       );
-    });
+    }
 
-    container.innerHTML = '';
-
-    if (filtered.length === 0) {
-      container.innerHTML = `
-        <div class="card text-center full-width" style="padding: 3rem; grid-column: 1 / -1;">
-          <i data-lucide="users" style="width: 48px; height: 48px; color: var(--text-muted); margin-bottom: 1rem;"></i>
-          <h3>Nenhum cliente encontrado</h3>
-          <p class="text-muted" style="margin-top:0.5rem">Clique em "+ Novo Cliente" para cadastrar.</p>
+    if (clients.length === 0) {
+      this.gridContainer.innerHTML = `
+        <div class="empty-state" style="grid-column: 1 / -1; padding: 2.5rem; text-align: center;">
+          <i data-lucide="users" style="width:48px; height:48px; color:var(--text-muted)"></i>
+          <h3 style="margin-top:0.75rem; font-weight:800">Nenhum cliente encontrado</h3>
+          <p class="text-muted">Cadastre seus clientes com Nome, Telefone, Empresa e Cidade.</p>
         </div>
       `;
+      if (window.lucide) window.lucide.createIcons();
       return;
     }
 
-    filtered.forEach(client => {
-      const initial = client.name ? client.name.charAt(0).toUpperCase() : 'C';
+    let html = '';
+    clients.forEach(client => {
+      html += `
+        <div class="card client-card" style="padding:1.25rem; display:flex; flex-direction:column; justify-content:space-between">
+          <div>
+            <div style="display:flex; justify-content:space-between; align-items:flex-start">
+              <h4 style="font-size:1.1rem; font-weight:800">${client.name}</h4>
+              <button class="icon-btn btn-xs" onclick="window.App.openClientModal(window.Store.getClients().find(x=>x.id==='${client.id}'))" title="Editar Cliente">
+                <i data-lucide="edit-3"></i>
+              </button>
+            </div>
 
-      const card = document.createElement('div');
-      card.className = 'client-card';
-      card.innerHTML = `
-        <div>
-          <div class="client-header">
-            <div class="client-avatar">${initial}</div>
-            <div class="client-details">
-              <h4>${client.name}</h4>
-              <div class="client-contact">
-                <i data-lucide="phone" style="width:14px; height:14px"></i> ${client.phone || 'Sem Telefone'}
+            <div style="margin-top:0.75rem; display:flex; flex-direction:column; gap:0.35rem; font-size:0.875rem">
+              <div style="color:var(--primary); font-weight:700">
+                <i data-lucide="phone" style="width:14px; height:14px; vertical-align:middle"></i> ${client.phone}
               </div>
+              ${client.company ? `
+                <div class="text-muted">
+                  <i data-lucide="building-2" style="width:14px; height:14px; vertical-align:middle"></i> <strong>Empresa:</strong> ${client.company}
+                </div>
+              ` : ''}
+              ${client.city ? `
+                <div class="text-muted">
+                  <i data-lucide="map-pin" style="width:14px; height:14px; vertical-align:middle"></i> <strong>Cidade:</strong> ${client.city}
+                </div>
+              ` : ''}
+              ${client.anamnesis ? `
+                <div class="text-muted" style="margin-top:0.35rem; font-size:0.8rem; background:var(--bg-surface-secondary); padding:0.5rem; border-radius:var(--radius-sm)">
+                  <strong>Obs:</strong> ${client.anamnesis}
+                </div>
+              ` : ''}
             </div>
           </div>
 
-          ${client.birthDate ? `
-            <div style="font-size:0.8rem; color:var(--text-muted); margin-top:0.75rem">
-              🎂 Nascimento: <strong>${this.formatDateBR(client.birthDate)}</strong>
-            </div>
-          ` : ''}
-
-          <div style="font-size:0.825rem; margin-top:0.6rem; background:var(--bg-surface-secondary); padding:0.6rem 0.85rem; border-radius:var(--radius-md)">
-            <strong>Anamnese / Notas:</strong><br>
-            <span class="text-muted">${client.anamnesis || 'Sem observações cadastradas.'}</span>
-          </div>
-        </div>
-
-        <div style="display:flex; justify-content:space-between; align-items:center; border-top:1px solid var(--border-color); padding-top:0.85rem; margin-top:0.5rem">
-          <button class="btn btn-whatsapp btn-xs btn-wa-client">
-            <i data-lucide="message-circle"></i> Conversar WA
-          </button>
-          <div style="display:flex; gap:0.4rem">
-            <button class="icon-btn btn-edit-client" title="Editar Cliente">
-              <i data-lucide="edit-3"></i>
+          <div style="margin-top:1.25rem; display:flex; gap:0.5rem">
+            <button class="btn btn-whatsapp btn-xs w-full" onclick="window.App.openWhatsAppModal('${client.phone}', 'reminder', { cliente: '${client.name}' })">
+              <i data-lucide="message-circle"></i> Mensagem WhatsApp
             </button>
-            <button class="icon-btn btn-delete-client" style="color:var(--danger)" title="Excluir">
+            <button class="icon-btn text-danger btn-xs" onclick="window.Clients.deleteClient('${client.id}')" title="Excluir Cliente">
               <i data-lucide="trash-2"></i>
             </button>
           </div>
         </div>
       `;
-
-      card.querySelector('.btn-wa-client').onclick = () => {
-        window.App.openWhatsAppModal(client.phone, 'custom', { clientName: client.name });
-      };
-
-      card.querySelector('.btn-edit-client').onclick = () => {
-        window.App.openClientModal(client);
-      };
-
-      card.querySelector('.btn-delete-client').onclick = () => {
-        if (confirm(`Deseja realmente excluir o cliente "${client.name}"?`)) {
-          let allClients = window.Store.getClients();
-          allClients = allClients.filter(c => c.id !== client.id);
-          window.Store.saveClients(allClients);
-          window.showToast('Cliente removido com sucesso!', 'success');
-          this.render();
-        }
-      };
-
-      container.appendChild(card);
     });
 
+    this.gridContainer.innerHTML = html;
     if (window.lucide) window.lucide.createIcons();
   }
 
-  checkBirthdays(clients) {
-    const currentMonth = new Date().getMonth() + 1;
-    const birthdayClients = clients.filter(c => {
-      if (!c.birthDate) return false;
-      const parts = c.birthDate.split('-');
-      if (parts.length === 3) {
-        return parseInt(parts[1], 10) === currentMonth;
-      }
-      return false;
-    });
-
-    const alertSection = document.getElementById('birthdayAlertSection');
-    const birthdayContainer = document.getElementById('birthdayListContainer');
-    const badge = document.getElementById('birthdayBadge');
-
-    if (badge) {
-      badge.textContent = birthdayClients.length;
-      if (birthdayClients.length > 0) badge.classList.remove('hidden');
-      else badge.classList.add('hidden');
+  deleteClient(id) {
+    if (confirm('Deseja realmente excluir este cliente do sistema?')) {
+      let clients = window.Store.getClients();
+      clients = clients.filter(c => c.id !== id);
+      window.Store.saveClients(clients);
+      window.showToast('Cliente excluído com sucesso!', 'success');
+      this.render();
     }
-
-    if (!alertSection || !birthdayContainer) return;
-
-    if (birthdayClients.length === 0) {
-      alertSection.classList.add('hidden');
-      return;
-    }
-
-    alertSection.classList.remove('hidden');
-    birthdayContainer.innerHTML = '';
-
-    birthdayClients.forEach(c => {
-      const div = document.createElement('div');
-      div.className = 'birthday-item';
-      div.style.cssText = 'display:flex; justify-content:space-between; align-items:center; padding:0.5rem 0; border-bottom:1px solid rgba(0,0,0,0.05)';
-      div.innerHTML = `
-        <span>🎂 <strong>${c.name}</strong> - Aniversário no dia ${c.birthDate.split('-')[2]}</span>
-        <button class="btn btn-whatsapp btn-xs">
-          <i data-lucide="gift"></i> Parabenizar no WhatsApp
-        </button>
-      `;
-
-      div.querySelector('button').onclick = () => {
-        window.App.openWhatsAppModal(c.phone, 'birthday', { clientName: c.name });
-      };
-
-      birthdayContainer.appendChild(div);
-    });
-  }
-
-  formatDateBR(dateStr) {
-    if (!dateStr) return '';
-    const parts = dateStr.split('-');
-    if (parts.length === 3) return `${parts[2]}/${parts[1]}/${parts[0]}`;
-    return dateStr;
   }
 }
 
-window.Clients = new ClientsView();
+document.addEventListener('DOMContentLoaded', () => {
+  window.Clients = new ClientsController();
+});
