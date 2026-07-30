@@ -51,9 +51,18 @@ const DEFAULT_SEED_DATA = {
   transactions: []
 };
 
+function getLocalDateStr(d = new Date()) {
+  const dateObj = typeof d === 'string' ? new Date(d.includes('T') ? d : d + 'T00:00:00') : d;
+  const year = dateObj.getFullYear();
+  const month = String(dateObj.getMonth() + 1).padStart(2, '0');
+  const day = String(dateObj.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+}
+window.getLocalDateStr = getLocalDateStr;
+
 (function generateInitialAppointments() {
   const today = new Date();
-  const formatDate = (d) => d.toISOString().split('T')[0];
+  const formatDate = (d) => getLocalDateStr(d);
   
   const todayStr = formatDate(today);
   const tomorrow = new Date(today);

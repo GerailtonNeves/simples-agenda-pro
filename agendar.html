@@ -172,7 +172,7 @@
   <script>
     let currentStep = 1;
     let selectedService = null;
-    let selectedDate = new Date().toISOString().split('T')[0];
+    let selectedDate = window.getLocalDateStr();
     let selectedTime = null;
 
     // GERADOR DE SOM BIP DE AVISO
@@ -297,7 +297,7 @@
 
         <div class="form-group">
           <label class="form-label">Data do Agendamento *</label>
-          <input type="date" id="dateSelector" value="${selectedDate}" class="form-control" min="${new Date().toISOString().split('T')[0]}">
+          <input type="date" id="dateSelector" value="${selectedDate}" class="form-control" min="${window.getLocalDateStr()}">
         </div>
 
         <label class="form-label" style="margin-top:1rem">Horários Disponíveis *</label>

@@ -1,5 +1,5 @@
 /* ==========================================================================
-   SIMPLES AGENDA PRO - MAIN CONTROLLER WITH EMPLOYEES, CALCULATOR & CUSTOM RECURRENCE
+   SIMPLES AGENDA PRO - MAIN CONTROLLER WITH EMPLOYEES & CALCULATOR ENGINES
    ========================================================================== */
 
 class SoundEngine {
@@ -340,13 +340,14 @@ class AppController {
       if (e.key === STORAGE_KEYS.APPOINTMENTS || e.key === STORAGE_KEYS.TRANSACTIONS) {
         this.checkNewAppointments();
         this.updateAlertCenterBadge();
+        if (window.Agenda) window.Agenda.render();
       }
     });
 
     setInterval(() => {
       this.checkNewAppointments();
       this.updateAlertCenterBadge();
-    }, 3000);
+    }, 2500);
   }
 
   checkNewAppointments() {
@@ -362,6 +363,7 @@ class AppController {
 
     if (latestNewAppt) {
       this.triggerNewApptAlert(latestNewAppt);
+      if (window.Agenda) window.Agenda.render();
     }
   }
 
