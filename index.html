@@ -882,10 +882,10 @@
           <label class="form-label" style="color:var(--primary-hover)">🔄 Repetição / Compromisso Recorrente</label>
           <select id="apptRecurrence" class="form-control">
             <option value="none">❌ Sem Repetição (Agendamento Único)</option>
-            <option value="custom_dates">📅 Escolher Dias Específicos no Calendário (Múltiplas Datas)</option>
-            <option value="weekly_4">🔄 Semanal (Toda semana - 4 sessões consecutivas)</option>
+            <option value="custom_dates">📅 Escolher Várias Datas no Calendário</option>
+            <option value="weekly_4">🔄 Semanal (Toda semana - 4 sessões)</option>
             <option value="biweekly_4">🔄 Quinzenal (A cada 15 dias - 4 sessões)</option>
-            <option value="monthly_3">🔄 Mensal (Todo mês - 3 sessões consecutivas)</option>
+            <option value="monthly_3">🔄 Mensal (Todo mês - 3 sessões)</option>
           </select>
 
           <!-- SELETOR DE CALENDÁRIO INTERATIVO PARA MÚLTIPLAS DATAS -->
@@ -913,11 +913,11 @@
           <textarea id="apptNotes" rows="2" class="form-control" placeholder="Instruções ou preferências do cliente..."></textarea>
         </div>
 
-        <div class="modal-footer" style="justify-content:space-between">
-          <button type="button" class="btn btn-danger-outline btn-sm hidden" id="btnDeleteApptFromModal">
+        <div class="modal-footer" style="display:flex; align-items:center; justify-content:space-between; gap:0.5rem; flex-wrap:wrap">
+          <button type="button" class="btn btn-danger-outline btn-sm hidden" id="btnDeleteApptFromModal" style="flex-shrink:0">
             <i data-lucide="trash-2"></i> Excluir Agendamento
           </button>
-          <div style="display:flex; gap:0.5rem; margin-left:auto">
+          <div style="display:flex; gap:0.5rem; margin-left:auto; flex-wrap:wrap">
             <button type="button" class="btn btn-light close-modal">Cancelar</button>
             <button type="submit" class="btn btn-orange">
               <i data-lucide="check"></i> Salvar Agendamento
@@ -1194,6 +1194,7 @@
 
   <!-- Scripts do Aplicativo -->
   <script src="js/store.js"></script>
+  <script src="js/cloud-sync.js"></script>
   <script src="js/whatsapp.js"></script>
   <script src="js/agenda.js"></script>
   <script src="js/clients.js"></script>

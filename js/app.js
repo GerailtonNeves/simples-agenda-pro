@@ -95,6 +95,7 @@ class AppController {
     this.bindSoundTestButton();
     this.bindAlertCenterButton();
     this.bindRealtimeStorageListener();
+    if (window.CloudSync) window.CloudSync.init();
     this.requestBrowserNotificationPermission();
     this.loadInitialSettings();
     this.updateAlertCenterBadge();
@@ -151,7 +152,7 @@ class AppController {
   }
 
   updateAlertCenterBadge() {
-    const todayStr = new Date().toISOString().split('T')[0];
+    const todayStr = window.getLocalDateStr();
     const appts = window.Store.getAppointments() || [];
     const transactions = window.Store.getTransactions() || [];
 
@@ -178,7 +179,7 @@ class AppController {
     const body = document.getElementById('alertCenterModalBody');
     if (!modal || !body) return;
 
-    const todayStr = new Date().toISOString().split('T')[0];
+    const todayStr = window.getLocalDateStr();
     const appts = window.Store.getAppointments() || [];
     const transactions = window.Store.getTransactions() || [];
     const clients = window.Store.getClients() || [];
@@ -188,7 +189,7 @@ class AppController {
 
     const nextThreeDays = new Date();
     nextThreeDays.setDate(nextThreeDays.getDate() + 3);
-    const nextThreeStr = nextThreeDays.toISOString().split('T')[0];
+    const nextThreeStr = window.getLocalDateStr(nextThreeDays);
 
     const upcomingAppts = appts.filter(a => a.date >= todayStr && a.date <= nextThreeStr && a.status !== 'cancelled');
     const overdueTrans = transactions.filter(t => t.date < todayStr && t.status === 'pending');
@@ -713,7 +714,7 @@ class AppController {
       });
     }
 
-    const defaultDate = apptData ? apptData.date : (dateStr || new Date().toISOString().split('T')[0]);
+    const defaultDate = apptData ? apptData.date : (dateStr || window.getLocalDateStr());
     document.getElementById('apptId').value = apptData ? apptData.id : '';
     document.getElementById('apptDate').value = defaultDate;
     document.getElementById('apptTime').value = apptData ? apptData.time : (timeStr || '10:00');
@@ -818,7 +819,7 @@ class AppController {
           d.setDate(d.getDate() + (i * 7));
           const subAppt = {
             id: window.Store.generateId('app'),
-            clientId, serviceId, employeeId, date: d.toISOString().split('T')[0], time, price, status: 'scheduled', recurrence: 'none', notes: `${notes} (Sessão ${i+1}/4)`
+            clientId, serviceId, employeeId, date: window.getLocalDateStr(d), time, price, status: 'scheduled', recurrence: 'none', notes: `${notes} (Sessão ${i+1}/4)`
           };
           appointments.push(subAppt);
           this.knownApptIds.add(subAppt.id);
@@ -830,7 +831,7 @@ class AppController {
           d.setDate(d.getDate() + (i * 14));
           const subAppt = {
             id: window.Store.generateId('app'),
-            clientId, serviceId, employeeId, date: d.toISOString().split('T')[0], time, price, status: 'scheduled', recurrence: 'none', notes: `${notes} (Sessão ${i+1}/4)`
+            clientId, serviceId, employeeId, date: window.getLocalDateStr(d), time, price, status: 'scheduled', recurrence: 'none', notes: `${notes} (Sessão ${i+1}/4)`
           };
           appointments.push(subAppt);
           this.knownApptIds.add(subAppt.id);
@@ -842,7 +843,7 @@ class AppController {
           d.setMonth(d.getMonth() + i);
           const subAppt = {
             id: window.Store.generateId('app'),
-            clientId, serviceId, employeeId, date: d.toISOString().split('T')[0], time, price, status: 'scheduled', recurrence: 'none', notes: `${notes} (Sessão ${i+1}/3)`
+            clientId, serviceId, employeeId, date: window.getLocalDateStr(d), time, price, status: 'scheduled', recurrence: 'none', notes: `${notes} (Sessão ${i+1}/3)`
           };
           appointments.push(subAppt);
           this.knownApptIds.add(subAppt.id);
@@ -866,6 +867,7 @@ class AppController {
     }
 
     window.Store.saveAppointments(appointments);
+    if (window.CloudSync) window.CloudSync.pushToCloud();
 
     if (status === 'completed') {
       const services = window.Store.getServices();

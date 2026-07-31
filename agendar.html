@@ -168,6 +168,7 @@
   </div>
 
   <script src="js/store.js"></script>
+  <script src="js/cloud-sync.js"></script>
   <script src="js/whatsapp.js"></script>
   <script>
     let currentStep = 1;
@@ -209,6 +210,7 @@
 
     document.addEventListener('DOMContentLoaded', () => {
       loadBusinessProfile();
+      if (window.CloudSync) window.CloudSync.pollFromCloud();
       renderStep();
     });
 
@@ -406,6 +408,11 @@
 
         currentAppts.push(newAppt);
         window.Store.saveAppointments(currentAppts);
+
+        // SINCRONIZAR COM A NUVEM EM TEMPO REAL PARA QUALQUER CELULAR OU PC NO MUNDO
+        if (window.CloudSync) {
+          window.CloudSync.sendPublicBooking(newAppt, client);
+        }
 
         // DISPARAR SOM DE AVISO BIP!
         playNotificationBeep();
