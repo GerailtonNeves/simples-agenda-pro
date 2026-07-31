@@ -1,10 +1,9 @@
 /* ==========================================================================
-   SIMPLES AGENDA PRO - REALTIME CLOUD SYNC ENGINE (COM SUPORTE A EXCLUSÃO DEFINITIVA)
+   SIMPLES AGENDA PRO - REALTIME CLOUD SYNC ENGINE (100% SUPORTE A EXCLUSÃO DEFINITIVA)
    ========================================================================== */
 
 class CloudSyncEngine {
   constructor() {
-    // ID da nuvem compartilhada para sincronização completa de agendamentos, clientes e serviços
     this.defaultCloudId = '019fb9e9-5858-7525-979a-745b0d36df6f';
     this.endpoint = 'https://jsonblob.com/api/jsonBlob/';
     this.pollingInterval = null;
@@ -20,7 +19,6 @@ class CloudSyncEngine {
     return this.endpoint + this.getCloudId();
   }
 
-  // Inicializa o motor de sincronização na nuvem
   init() {
     this.pollFromCloud();
     this.startAutoSync();
@@ -33,7 +31,6 @@ class CloudSyncEngine {
     }, seconds * 1000);
   }
 
-  // Busca agendamentos, clientes e serviços recentes da nuvem em tempo real
   async pollFromCloud() {
     if (this.isSyncing) return;
     this.isSyncing = true;
@@ -59,10 +56,17 @@ class CloudSyncEngine {
       let changesMade = false;
       let newApptsReceived = [];
 
-      // 1. Sincronizar Serviços vindos da Nuvem
-      if (data.services && Array.isArray(data.services) && data.services.length > 0) {
+      // 1. Sincronizar Serviços vindos da Nuvem (REMOÇÃO DEFINITIVA DE SERVIÇOS EXCLUÍDOS)
+      if (data.services && Array.isArray(data.services)) {
         let localServices = window.Store.getServices() || [];
+        const cloudServiceIds = new Set(data.services.map(s => s.id));
         let servicesUpdated = false;
+
+        const initialSrvCount = localServices.length;
+        localServices = localServices.filter(s => cloudServiceIds.has(s.id));
+        if (localServices.length !== initialSrvCount) {
+          servicesUpdated = true;
+        }
 
         data.services.forEach(remoteSrv => {
           const idx = localServices.findIndex(s => s.id === remoteSrv.id);
@@ -81,10 +85,17 @@ class CloudSyncEngine {
         }
       }
 
-      // 2. Sincronizar Clientes vindos da Nuvem
+      // 2. Sincronizar Clientes vindos da Nuvem (REMOÇÃO DEFINITIVA DE CLIENTES EXCLUÍDOS)
       if (data.clients && Array.isArray(data.clients)) {
         let localClients = window.Store.getClients() || [];
+        const cloudClientIds = new Set(data.clients.map(c => c.id));
         let clientsUpdated = false;
+
+        const initialCliCount = localClients.length;
+        localClients = localClients.filter(c => cloudClientIds.has(c.id));
+        if (localClients.length !== initialCliCount) {
+          clientsUpdated = true;
+        }
 
         data.clients.forEach(remoteCli => {
           const idx = localClients.findIndex(c => c.id === remoteCli.id || (c.phone && remoteCli.phone && c.phone.replace(/\D/g, '') === remoteCli.phone.replace(/\D/g, '')));
@@ -105,29 +116,25 @@ class CloudSyncEngine {
 
         if (clientsUpdated) {
           window.Store.saveClients(localClients);
-          changesMade = true;
           if (window.Clients) window.Clients.render();
         }
       }
 
-      // 3. Sincronizar Agendamentos vindos da Nuvem (COM SUPORTE A REMOÇÃO DE EXCLUÍDOS)
+      // 3. Sincronizar Agendamentos vindos da Nuvem (REMOÇÃO DEFINITIVA DE AGENDAMENTOS EXCLUÍDOS)
       if (data.appointments && Array.isArray(data.appointments)) {
         let localAppts = window.Store.getAppointments() || [];
         const cloudApptIds = new Set(data.appointments.map(a => a.id));
 
-        // 3a. Se um agendamento foi excluído na nuvem, remover localmente para não voltar
-        const initialCount = localAppts.length;
+        const initialApptCount = localAppts.length;
         localAppts = localAppts.filter(a => cloudApptIds.has(a.id));
-        if (localAppts.length !== initialCount) {
+        if (localAppts.length !== initialApptCount) {
           changesMade = true;
         }
 
-        // 3b. Adicionar ou atualizar agendamentos que estão na nuvem
         data.appointments.forEach(remoteAppt => {
           const localIdx = localAppts.findIndex(a => a.id === remoteAppt.id);
 
           if (localIdx === -1) {
-            // Novo agendamento vindo da nuvem!
             localAppts.push(remoteAppt);
             newApptsReceived.push(remoteAppt);
             changesMade = true;
@@ -161,7 +168,6 @@ class CloudSyncEngine {
     }
   }
 
-  // Envia agendamentos, clientes e serviços locais para a Nuvem
   async pushToCloud(customData = null) {
     try {
       const localAppts = window.Store.getAppointments() || [];
@@ -188,7 +194,6 @@ class CloudSyncEngine {
     }
   }
 
-  // Envia 1 novo agendamento feito pelo cliente no link público
   async sendPublicBooking(newAppt, newClient) {
     try {
       let cloudAppts = [];

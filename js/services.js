@@ -116,6 +116,8 @@ class ServicesView {
           let list = window.Store.getServices();
           list = list.filter(s => s.id !== srv.id);
           window.Store.saveServices(list);
+          if (window.CloudSync) window.CloudSync.pushToCloud();
+
           window.showToast('Serviço removido com sucesso!', 'success');
           this.renderServices();
         }
@@ -252,6 +254,7 @@ class ServicesView {
           prod.stock = (parseInt(prod.stock, 10) || 0) + qty;
 
           this.updateSingleProduct(prod);
+          if (window.CloudSync) window.CloudSync.pushToCloud();
           window.showToast(`Adicionadas +${qty} unidades ao estoque de ${prod.name}!`, 'success');
           this.renderProducts();
         }
@@ -273,6 +276,7 @@ class ServicesView {
 
           prod.stock = stock - qty;
           this.updateSingleProduct(prod);
+          if (window.CloudSync) window.CloudSync.pushToCloud();
 
           const totalSale = qty * parseFloat(prod.price || 0);
           let trans = window.Store.getTransactions();
@@ -299,6 +303,8 @@ class ServicesView {
           let list = window.Store.getProducts();
           list = list.filter(p => p.id !== prod.id);
           window.Store.saveProducts(list);
+          if (window.CloudSync) window.CloudSync.pushToCloud();
+
           window.showToast('Produto excluído do estoque.', 'success');
           this.renderProducts();
         }
