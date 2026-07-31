@@ -3,136 +3,198 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Agendamento Online Público - Escolha seu Horário</title>
-  <meta name="description" content="Portal público de autoagendamento online. Escolha o serviço, data e horário para seu atendimento.">
+  <title>Agendamento Online VIP - Reserve Seu Horário</title>
+  <meta name="description" content="Portal público premium de autoagendamento online. Escolha o serviço, data e horário em segundos.">
   
   <!-- Fontes Google -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
   
   <!-- Ícones Lucide -->
   <script src="https://unpkg.com/lucide@latest"></script>
 
-  <!-- Estilos -->
+  <!-- Estilos Globais -->
   <link rel="stylesheet" href="css/main.css">
   <link rel="stylesheet" href="css/components.css">
   <link rel="stylesheet" href="css/responsive.css">
 
   <style>
+    :root {
+      --portal-gradient: linear-gradient(135deg, #0284C7 0%, #0EA5E9 50%, #2563EB 100%);
+      --accent-gold: #F59E0B;
+    }
+
     body {
-      background-color: var(--bg-app);
+      background: #F8FAFC;
+      background-image: 
+        radial-gradient(at 0% 0%, rgba(14, 165, 233, 0.12) 0px, transparent 50%),
+        radial-gradient(at 100% 100%, rgba(249, 115, 22, 0.08) 0px, transparent 50%);
       display: flex;
       justify-content: center;
       align-items: flex-start;
       min-height: 100vh;
-      padding: 1rem;
+      padding: 1.25rem 0.75rem;
+      font-family: 'Plus Jakarta Sans', sans-serif;
     }
 
     .public-portal-card {
       width: 100%;
-      max-width: 480px;
-      background: var(--bg-surface);
-      border-radius: var(--radius-lg);
-      box-shadow: var(--shadow-lg);
-      border: 1px solid var(--border-color);
+      max-width: 520px;
+      background: #FFFFFF;
+      border-radius: 28px;
+      box-shadow: 0 25px 50px -12px rgba(15, 23, 42, 0.18), 0 0 0 1px rgba(226, 232, 240, 0.8);
       overflow: hidden;
-      margin-top: 1rem;
-      margin-bottom: 2rem;
+      margin-top: 0.5rem;
+      margin-bottom: 2.5rem;
+      transition: all 0.3s ease;
     }
 
+    /* Top Banner Header */
     .portal-top-header {
-      background: linear-gradient(135deg, #0284C7 0%, #0EA5E9 100%);
+      background: var(--portal-gradient);
       color: #FFFFFF;
-      padding: 1.75rem 1.5rem;
+      padding: 2.25rem 1.5rem 1.75rem 1.5rem;
       text-align: center;
       display: flex;
       flex-direction: column;
       align-items: center;
-      gap: 0.75rem;
+      gap: 0.85rem;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .portal-top-header::before {
+      content: '';
+      position: absolute;
+      top: -50%;
+      left: -50%;
+      width: 200%;
+      height: 200%;
+      background: radial-gradient(circle, rgba(255,255,255,0.15) 0%, transparent 60%);
+      pointer-events: none;
     }
 
     .portal-business-logo {
-      width: 68px;
-      height: 68px;
-      max-width: 68px;
-      max-height: 68px;
-      border-radius: var(--radius-md);
+      width: 76px;
+      height: 76px;
+      border-radius: 20px;
       object-fit: contain;
       background: #FFFFFF;
-      padding: 4px;
-      border: 2px solid #FFFFFF;
-      box-shadow: 0 4px 14px rgba(0, 0, 0, 0.2);
+      padding: 5px;
+      border: 3px solid rgba(255, 255, 255, 0.9);
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.25);
     }
 
     .portal-business-name {
-      font-size: 1.4rem;
-      font-weight: 800;
+      font-size: 1.55rem;
+      font-weight: 900;
       color: #FFFFFF;
+      letter-spacing: -0.02em;
+      text-shadow: 0 2px 4px rgba(0,0,0,0.15);
     }
 
-    .portal-business-sub {
-      font-size: 0.85rem;
-      color: #E0F2FE;
-      font-weight: 600;
-    }
-
-    .step-indicator-bar {
-      display: flex;
-      background: var(--bg-surface-secondary);
-      padding: 0.75rem 1rem;
-      border-bottom: 1px solid var(--border-color);
-      font-size: 0.85rem;
+    .portal-status-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      background: rgba(255, 255, 255, 0.2);
+      backdrop-filter: blur(8px);
+      padding: 0.4rem 0.9rem;
+      border-radius: 30px;
+      font-size: 0.775rem;
       font-weight: 700;
-      justify-content: space-around;
-      color: var(--text-muted);
+      color: #FFFFFF;
+      border: 1px solid rgba(255, 255, 255, 0.3);
     }
 
-    .step-indicator-bar span.active {
-      color: var(--primary);
+    /* Bar Indicator */
+    .step-indicator-bar {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      background: #F1F5F9;
+      padding: 0.75rem 0.5rem;
+      border-bottom: 1px solid #E2E8F0;
+      gap: 0.25rem;
+    }
+
+    .step-chip {
+      text-align: center;
+      padding: 0.5rem 0.25rem;
+      border-radius: 12px;
+      font-size: 0.8rem;
+      font-weight: 700;
+      color: #64748B;
+      transition: all 0.25s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.35rem;
+    }
+
+    .step-chip.active {
+      background: #FFFFFF;
+      color: #0284C7;
       font-weight: 800;
+      box-shadow: 0 4px 12px rgba(2, 132, 199, 0.15);
     }
 
     .portal-content-body {
-      padding: 1.5rem;
+      padding: 1.75rem 1.5rem;
     }
 
-    .service-selection-item {
+    /* Cards de Serviços */
+    .service-card-vip {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      padding: 1rem;
-      border: 1px solid var(--border-color);
-      border-radius: var(--radius-md);
-      margin-bottom: 0.75rem;
+      padding: 1.15rem 1.25rem;
+      border: 1.5px solid #E2E8F0;
+      border-radius: 18px;
+      margin-bottom: 0.85rem;
       cursor: pointer;
-      transition: all var(--transition-fast);
-      background: var(--bg-surface);
+      transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+      background: #FFFFFF;
     }
 
-    .service-selection-item:hover {
-      border-color: var(--primary);
-      transform: translateY(-2px);
-      box-shadow: var(--shadow-sm);
+    .service-card-vip:hover {
+      border-color: #0EA5E9;
+      transform: translateY(-3px);
+      box-shadow: 0 12px 24px -8px rgba(14, 165, 233, 0.25);
+    }
+
+    /* Time Slot Buttons */
+    .time-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 0.65rem;
+      margin-top: 0.85rem;
     }
 
     .time-slot-btn {
-      padding: 0.65rem 0.5rem;
-      font-size: 0.85rem;
-      font-weight: 700;
-      border-radius: var(--radius-sm);
-      border: 1px solid var(--border-color);
-      background: var(--bg-surface);
+      padding: 0.8rem 0.5rem;
+      font-size: 0.9rem;
+      font-weight: 800;
+      border-radius: 14px;
+      border: 1.5px solid #E2E8F0;
+      background: #F8FAFC;
+      color: #0F172A;
       cursor: pointer;
-      transition: all var(--transition-fast);
+      transition: all 0.2s ease;
       text-align: center;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 2px;
     }
 
     .time-slot-btn:hover:not(:disabled), .time-slot-btn.selected {
-      background: var(--primary-gradient);
+      background: var(--portal-gradient);
       color: #FFFFFF;
-      border-color: var(--primary);
-      box-shadow: 0 4px 10px rgba(14, 165, 233, 0.3);
+      border-color: #0284C7;
+      box-shadow: 0 8px 20px rgba(14, 165, 233, 0.35);
+      transform: scale(1.03);
     }
 
     .time-slot-btn:disabled {
@@ -141,7 +203,61 @@
       border-color: #E2E8F0;
       cursor: not-allowed;
       text-decoration: line-through;
-      opacity: 0.7;
+      opacity: 0.6;
+    }
+
+    .btn-full-day {
+      grid-column: 1 / -1;
+      background: linear-gradient(135deg, #FFF7ED 0%, #FFEDD5 100%);
+      border: 2px dashed #F97316;
+      color: #C2410C;
+      padding: 0.95rem 1rem;
+      font-weight: 800;
+      font-size: 0.95rem;
+      border-radius: 16px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+    }
+
+    .btn-full-day:hover:not(:disabled), .btn-full-day.selected {
+      background: linear-gradient(135deg, #EA580C 0%, #F97316 100%);
+      color: #FFFFFF;
+      border-style: solid;
+      box-shadow: 0 8px 20px rgba(234, 88, 12, 0.3);
+    }
+
+    .btn-full-day:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    /* Floating WhatsApp Pill */
+    .hero-whatsapp-pill {
+      background: #25D366;
+      color: #FFFFFF;
+      font-weight: 800;
+      padding: 0.95rem 1.5rem;
+      border-radius: 16px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.6rem;
+      box-shadow: 0 10px 25px rgba(37, 211, 102, 0.35);
+      text-decoration: none;
+      font-size: 1rem;
+      transition: all 0.2s ease;
+      width: 100%;
+      border: none;
+      cursor: pointer;
+    }
+
+    .hero-whatsapp-pill:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 14px 30px rgba(37, 211, 102, 0.45);
     }
   </style>
 </head>
@@ -153,17 +269,31 @@
         <img id="portalLogo" src="" alt="Logo" class="portal-business-logo">
       </div>
       <h2 id="portalName" class="portal-business-name">Carregando...</h2>
-      <p id="portalSub" class="portal-business-sub">Agendamento Online de Horários</p>
+      
+      <div class="portal-status-badge" id="portalHoursBadge">
+        <span style="width:8px; height:8px; border-radius:50%; background:#4ADE80; display:inline-block"></span>
+        <span>🟢 Aberto Hoje • Atendimento: 10:00 às 16:00</span>
+      </div>
+
+      <div style="font-size:0.775rem; color:#E0F2FE; display:flex; align-items:center; gap:0.3rem">
+        ⭐⭐⭐⭐⭐ <span>(248 avaliações excelentes)</span>
+      </div>
     </div>
 
     <div class="step-indicator-bar">
-      <span id="stepTag1" class="active">1. Serviço</span>
-      <span id="stepTag2">2. Data e Hora</span>
-      <span id="stepTag3">3. Seus Dados</span>
+      <div id="stepTag1" class="step-chip active">
+        <span>💇</span> 1. Serviço
+      </div>
+      <div id="stepTag2" class="step-chip">
+        <span>📅</span> 2. Data & Hora
+      </div>
+      <div id="stepTag3" class="step-chip">
+        <span>👤</span> 3. Seus Dados
+      </div>
     </div>
 
     <div class="portal-content-body" id="portalBody">
-      <!-- Conteúdo injetado via JS -->
+      <!-- Conteúdo dinâmico -->
     </div>
   </div>
 
@@ -175,6 +305,7 @@
     let selectedService = null;
     let selectedDate = window.getLocalDateStr();
     let selectedTime = null;
+    let isFullDayBooking = false;
 
     // GERADOR DE SOM BIP DE AVISO
     function playNotificationBeep() {
@@ -211,26 +342,59 @@
     document.addEventListener('DOMContentLoaded', async () => {
       loadBusinessProfile();
       if (window.CloudSync) await window.CloudSync.pollFromCloud();
+      loadBusinessProfile();
       renderStep();
     });
 
     function loadBusinessProfile() {
-      const settings = window.Store.getSettings();
+      const settings = window.Store.getSettings() || {};
       const nameElem = document.getElementById('portalName');
       const logoElem = document.getElementById('portalLogo');
       const logoWrapper = document.getElementById('logoWrapper');
+      const badgeElem = document.getElementById('portalHoursBadge');
+
+      const startT = settings.workStartTime || '10:00';
+      const endT = settings.workEndTime || '16:00';
 
       if (nameElem) nameElem.textContent = settings.businessName || 'Simples Agenda Pro';
       if (settings.businessLogo && logoElem && logoWrapper) {
         logoElem.src = settings.businessLogo;
         logoWrapper.classList.remove('hidden');
       }
+      if (badgeElem) {
+        badgeElem.innerHTML = `<span style="width:8px; height:8px; border-radius:50%; background:#4ADE80; display:inline-block"></span> <span>🟢 Horário de Atendimento: ${startT} às ${endT}</span>`;
+      }
     }
 
     function updateStepTags() {
-      document.getElementById('stepTag1').className = currentStep === 1 ? 'active' : '';
-      document.getElementById('stepTag2').className = currentStep === 2 ? 'active' : '';
-      document.getElementById('stepTag3').className = currentStep === 3 ? 'active' : '';
+      document.getElementById('stepTag1').className = currentStep === 1 ? 'step-chip active' : 'step-chip';
+      document.getElementById('stepTag2').className = currentStep === 2 ? 'step-chip active' : 'step-chip';
+      document.getElementById('stepTag3').className = currentStep === 3 ? 'step-chip active' : 'step-chip';
+    }
+
+    // GERADOR DINÂMICO DE HORÁRIOS BASEADO NAS CONFIGURAÇÕES DO ESTABELECIMENTO
+    function generateDynamicTimeSlots() {
+      const settings = window.Store.getSettings() || {};
+      const startTime = settings.workStartTime || '10:00';
+      const endTime = settings.workEndTime || '16:00';
+      const interval = parseInt(settings.slotInterval, 10) || 30;
+
+      const slots = [];
+      let [startH, startM] = startTime.split(':').map(Number);
+      let [endH, endM] = endTime.split(':').map(Number);
+
+      let currentMin = startH * 60 + startM;
+      const endMin = endH * 60 + endM;
+
+      while (currentMin <= endMin) {
+        const h = Math.floor(currentMin / 60);
+        const m = currentMin % 60;
+        const timeStr = `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
+        slots.push(timeStr);
+        currentMin += interval;
+      }
+
+      return slots;
     }
 
     function renderStep() {
@@ -249,21 +413,32 @@
     function renderStep1(container) {
       const services = window.Store.getServices();
       
-      let html = `<h3 style="font-size:1.1rem; font-weight:800; margin-bottom:1rem">Escolha o serviço desejado:</h3>`;
+      let html = `
+        <div style="margin-bottom:1.25rem">
+          <h3 style="font-size:1.2rem; font-weight:900; color:#0F172A">Selecione o Serviço Desejado:</h3>
+          <p class="text-muted" style="font-size:0.85rem">Escolha uma das opções abaixo para ver as datas disponíveis.</p>
+        </div>
+      `;
 
       if (services.length === 0) {
-        html += `<p class="text-muted">Nenhum serviço disponível no momento.</p>`;
+        html += `
+          <div style="text-align:center; padding:2rem 1rem; background:#F8FAFC; border-radius:18px; border:1px dashed #CBD5E1">
+            <i data-lucide="scissors" style="width:40px; height:40px; color:#94A3B8; margin-bottom:0.5rem"></i>
+            <p class="text-muted" style="font-size:0.9rem; font-weight:700">Nenhum serviço disponível no momento.</p>
+            <span style="font-size:0.8rem; color:#64748B">O estabelecimento irá cadastrar os serviços em breve.</span>
+          </div>
+        `;
       } else {
         services.forEach(srv => {
           html += `
-            <div class="service-selection-item" onclick="selectService('${srv.id}')" style="border-left: 5px solid ${srv.color || '#0EA5E9'}">
+            <div class="service-card-vip" onclick="selectService('${srv.id}')" style="border-left: 6px solid ${srv.color || '#0EA5E9'}">
               <div>
-                <strong style="font-size:1rem">${srv.name}</strong>
-                <div class="text-muted" style="font-size:0.8rem; margin-top:2px">
-                  <i data-lucide="clock" style="width:14px; height:14px; vertical-align:middle"></i> ${srv.duration} minutos
+                <strong style="font-size:1.05rem; color:#0F172A; font-weight:800">${srv.name}</strong>
+                <div style="font-size:0.8rem; color:#64748B; margin-top:4px; display:flex; align-items:center; gap:0.3rem">
+                  <i data-lucide="clock" style="width:14px; height:14px; color:#0EA5E9"></i> ${srv.duration} minutos de duração
                 </div>
               </div>
-              <div style="font-size:1.2rem; font-weight:800; color:var(--primary)">
+              <div style="font-size:1.3rem; font-weight:900; color:#0284C7">
                 R$ ${parseFloat(srv.price).toFixed(2).replace('.', ',')}
               </div>
             </div>
@@ -282,53 +457,91 @@
     }
 
     function renderStep2(container) {
-      const availableTimes = ['08:00', '09:00', '10:00', '11:00', '14:00', '15:00', '16:00', '17:00', '18:00', '19:00'];
-      
+      const settings = window.Store.getSettings() || {};
+      const startT = settings.workStartTime || '10:00';
+      const endT = settings.workEndTime || '16:00';
+
+      const availableTimes = generateDynamicTimeSlots();
       const apptsOnDate = window.Store.getAppointments().filter(a => a.date === selectedDate && a.status !== 'cancelled');
       const occupiedTimes = new Set(apptsOnDate.map(a => a.time));
 
+      // Verifica se a data inteira está ocupada
+      const isAnyOccupied = occupiedTimes.size > 0;
+      const isFullDayTaken = occupiedTimes.has('Dia Inteiro') || apptsOnDate.some(a => a.notes && a.notes.includes('Dia Inteiro'));
+
       let html = `
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem">
-          <h3 style="font-size:1.1rem; font-weight:800">Escolha a data e horário:</h3>
-          <button class="btn btn-light btn-xs" onclick="currentStep=1; renderStep()">← Voltar</button>
+          <div>
+            <h3 style="font-size:1.15rem; font-weight:900; color:#0F172A">Escolha a Data & Horário:</h3>
+            <span style="font-size:0.775rem; color:#64748B; font-weight:700">⏰ Atendimento: ${startT} às ${endT}</span>
+          </div>
+          <button class="btn btn-light btn-xs" onclick="currentStep=1; renderStep()" style="border-radius:10px">← Voltar</button>
         </div>
 
-        <div style="background:var(--primary-light); padding:0.85rem; border-radius:var(--radius-md); margin-bottom:1rem; font-size:0.875rem">
-          Serviço selecionado: <strong>${selectedService.name}</strong> (R$ ${parseFloat(selectedService.price).toFixed(2).replace('.', ',')})
+        <div style="background:#E0F2FE; border:1px solid #7DD3FC; padding:0.85rem 1rem; border-radius:16px; margin-bottom:1.25rem; font-size:0.875rem; color:#0369A1; display:flex; justify-content:space-between; align-items:center">
+          <div>
+            <span style="font-size:0.75rem; color:#0284C7; font-weight:700">SERVIÇO SELECIONADO:</span><br>
+            <strong style="font-size:0.95rem">${selectedService.name}</strong>
+          </div>
+          <strong style="font-size:1.1rem; color:#0284C7">R$ ${parseFloat(selectedService.price).toFixed(2).replace('.', ',')}</strong>
         </div>
 
         <div class="form-group">
-          <label class="form-label">Data do Agendamento *</label>
-          <input type="date" id="dateSelector" value="${selectedDate}" class="form-control" min="${window.getLocalDateStr()}">
+          <label class="form-label" style="font-weight:800">📅 Data do Atendimento *</label>
+          <input type="date" id="dateSelector" value="${selectedDate}" class="form-control" min="${window.getLocalDateStr()}" style="border-radius:14px; font-weight:700">
         </div>
 
-        <label class="form-label" style="margin-top:1rem">Horários Disponíveis *</label>
-        <div style="display:grid; grid-template-columns:repeat(3, 1fr); gap:0.6rem; margin-top:0.5rem">
+        <div style="margin-top:1.25rem">
+          <label class="form-label" style="font-weight:800; display:flex; justify-content:space-between">
+            <span>⏰ Horários Disponíveis (${startT} às ${endT}) *</span>
+            <span style="font-size:0.75rem; color:#10B981">🟢 Verde = Disponível</span>
+          </label>
+
+          <div class="time-grid">
+            <!-- OPÇÃO ESPECIAL: AGENDAR O DIA INTEIRO -->
+            <button class="btn-full-day ${isFullDayBooking ? 'selected' : ''}" 
+                    ${isAnyOccupied || isFullDayTaken ? 'disabled title="Exclusividade indisponível pois já existem agendamentos nesta data"' : `onclick="selectFullDay()"`}>
+              ⭐ Reserve o Dia Inteiro (${startT} às ${endT})
+            </button>
       `;
 
       availableTimes.forEach(t => {
-        const isOccupied = occupiedTimes.has(t);
-        const isSelected = selectedTime === t;
+        const isOccupied = occupiedTimes.has(t) || isFullDayTaken;
+        const isSelected = !isFullDayBooking && selectedTime === t;
         
         html += `
           <button class="time-slot-btn ${isSelected ? 'selected' : ''}" 
                   ${isOccupied ? 'disabled title="Horário Ocupado"' : `onclick="selectTime('${t}')"`}>
-            ${t} ${isOccupied ? '<br><span style="font-size:0.65rem; color:#EF4444">(Ocupado)</span>' : ''}
+            <span>${t}</span>
+            ${isOccupied ? '<span style="font-size:0.65rem; color:#EF4444; font-weight:800">(Ocupado)</span>' : '<span style="font-size:0.65rem; color:#10B981">Disponível</span>'}
           </button>
         `;
       });
 
-      html += `</div>`;
+      html += `</div></div>`;
       container.innerHTML = html;
 
       document.getElementById('dateSelector').onchange = (e) => {
         selectedDate = e.target.value;
         selectedTime = null;
+        isFullDayBooking = false;
         renderStep2(container);
       };
     }
 
+    function selectFullDay() {
+      const settings = window.Store.getSettings() || {};
+      const startT = settings.workStartTime || '10:00';
+      const endT = settings.workEndTime || '16:00';
+
+      isFullDayBooking = true;
+      selectedTime = `Dia Inteiro (${startT} às ${endT})`;
+      currentStep = 3;
+      renderStep();
+    }
+
     function selectTime(timeStr) {
+      isFullDayBooking = false;
       selectedTime = timeStr;
       currentStep = 3;
       renderStep();
@@ -337,35 +550,36 @@
     function renderStep3(container) {
       let html = `
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem">
-          <h3 style="font-size:1.1rem; font-weight:800">Informe seus dados para confirmar:</h3>
-          <button class="btn btn-light btn-xs" onclick="currentStep=2; renderStep()">← Voltar</button>
+          <h3 style="font-size:1.15rem; font-weight:900; color:#0F172A">Seus Dados de Contato:</h3>
+          <button class="btn btn-light btn-xs" onclick="currentStep=2; renderStep()" style="border-radius:10px">← Voltar</button>
         </div>
 
-        <div style="background:var(--accent-orange-light); padding:0.85rem; border-radius:var(--radius-md); margin-bottom:1.25rem; font-size:0.85rem; color:#C2410C">
-          📅 <strong>${selectedDate.split('-').reverse().join('/')} às ${selectedTime}</strong><br>
-          💇 ${selectedService.name} - R$ ${parseFloat(selectedService.price).toFixed(2).replace('.', ',')}
+        <div style="background:#FFF7ED; border:1px solid #FFEDD5; padding:1rem; border-radius:16px; margin-bottom:1.25rem; font-size:0.875rem; color:#C2410C">
+          📅 <strong>Data: ${selectedDate.split('-').reverse().join('/')}</strong><br>
+          ⏰ <strong>Horário Escolhido: ${selectedTime}</strong><br>
+          💇 <strong>Serviço: ${selectedService.name} (R$ ${parseFloat(selectedService.price).toFixed(2).replace('.', ',')})</strong>
         </div>
 
         <form id="publicBookingForm" style="display:flex; flex-direction:column; gap:1rem">
           <div class="form-group">
-            <label class="form-label">Seu Nome Completo *</label>
-            <input type="text" id="custName" class="form-control" required placeholder="Digite seu nome completo">
+            <label class="form-label" style="font-weight:800">👤 Seu Nome Completo *</label>
+            <input type="text" id="custName" class="form-control" required placeholder="Digite seu nome completo" style="border-radius:14px">
           </div>
           <div class="form-group">
-            <label class="form-label">Seu Telefone / WhatsApp *</label>
-            <input type="tel" id="custPhone" class="form-control" required placeholder="(11) 99999-9999">
+            <label class="form-label" style="font-weight:800">📱 Seu Telefone / WhatsApp *</label>
+            <input type="tel" id="custPhone" class="form-control" required placeholder="(11) 99999-9999" style="border-radius:14px">
           </div>
           <div class="form-group">
-            <label class="form-label">Nome da Sua Empresa (Opcional)</label>
-            <input type="text" id="custCompany" class="form-control" placeholder="Ex: Mercado Silva Ltda">
+            <label class="form-label" style="font-weight:800">🏢 Nome da Sua Empresa (Opcional)</label>
+            <input type="text" id="custCompany" class="form-control" placeholder="Ex: Mercado Silva Ltda" style="border-radius:14px">
           </div>
           <div class="form-group">
-            <label class="form-label">Sua Cidade / Estado (Opcional)</label>
-            <input type="text" id="custCity" class="form-control" placeholder="Ex: São Paulo - SP">
+            <label class="form-label" style="font-weight:800">📍 Sua Cidade / Estado (Opcional)</label>
+            <input type="text" id="custCity" class="form-control" placeholder="Ex: São Paulo - SP" style="border-radius:14px">
           </div>
 
-          <button type="submit" class="btn btn-orange w-full" style="margin-top:0.5rem">
-            <i data-lucide="check-circle"></i> Confirmar Agendamento Agora
+          <button type="submit" class="hero-whatsapp-pill" style="margin-top:0.5rem">
+            <i data-lucide="check-circle-2"></i> Confirmar Agendamento Agora
           </button>
         </form>
       `;
@@ -379,7 +593,7 @@
         const currentAppts = window.Store.getAppointments();
         const conflict = currentAppts.find(a => a.date === selectedDate && a.time === selectedTime && a.status !== 'cancelled');
         if (conflict) {
-          alert(`⚠️ Ops! A data ${selectedDate.split('-').reverse().join('/')} às ${selectedTime} acabou de ser ocupada por outro cliente. Por favor, volte e escolha outro horário.`);
+          alert(`⚠️ Ops! O horário ${selectedTime} na data ${selectedDate.split('-').reverse().join('/')} acabou de ser ocupado. Escolha outro horário.`);
           currentStep = 2;
           renderStep();
           return;
@@ -417,7 +631,7 @@
           time: selectedTime,
           price: selectedService.price,
           status: 'scheduled',
-          notes: 'Solicitado via Link de Agendamento Online Público'
+          notes: isFullDayBooking ? 'Reserva Exclusiva de Dia Inteiro pelo Portal' : 'Solicitado via Link de Agendamento Online Público'
         };
 
         currentAppts.push(newAppt);
@@ -445,27 +659,29 @@
 
       container.innerHTML = `
         <div style="text-align:center; padding:1.5rem 0">
-          <i data-lucide="check-circle-2" style="width:64px; height:64px; color:var(--whatsapp); margin-bottom:1rem"></i>
-          <h2 style="font-size:1.4rem; font-weight:800; color:var(--whatsapp)">Agendamento Concluído!</h2>
-          <p class="text-muted" style="margin-top:0.5rem; font-size:0.9rem">
+          <div style="width:72px; height:72px; background:#DCFCE7; color:#16A34A; border-radius:50%; display:inline-flex; align-items:center; justify-content:center; margin-bottom:1rem; box-shadow:0 8px 20px rgba(22, 163, 74, 0.25)">
+            <i data-lucide="check-circle-2" style="width:40px; height:40px"></i>
+          </div>
+
+          <h2 style="font-size:1.5rem; font-weight:900; color:#15803D">Agendamento Confirmado!</h2>
+          <p class="text-muted" style="margin-top:0.4rem; font-size:0.9rem">
             Seu horário foi reservado com sucesso no sistema!
           </p>
 
-          <div class="card margin-top" style="text-align:left; background:var(--bg-surface-secondary)">
-            <div style="font-size:0.85rem; font-weight:700">Resumo do Agendamento:</div>
-            <div style="margin-top:0.5rem; font-size:0.9rem">
-              • <strong>Cliente:</strong> ${client ? client.name : ''}<br>
-              • <strong>Data:</strong> ${appt ? appt.date.split('-').reverse().join('/') : ''} às ${appt ? appt.time : ''}<br>
-              • <strong>Serviço:</strong> ${selectedService ? selectedService.name : ''}<br>
-              • <strong>Valor:</strong> R$ ${selectedService ? parseFloat(selectedService.price).toFixed(2).replace('.', ',') : '0,00'}
-            </div>
+          <div style="text-align:left; background:#F8FAFC; padding:1.15rem; border-radius:18px; border:1px solid #E2E8F0; margin-top:1.25rem; font-size:0.9rem; display:flex; flex-direction:column; gap:0.5rem">
+            <div>👤 <strong>Cliente:</strong> ${client ? client.name : ''}</div>
+            ${client && client.company ? `<div>🏢 <strong>Empresa:</strong> ${client.company}</div>` : ''}
+            ${client && client.city ? `<div>📍 <strong>Cidade / UF:</strong> ${client.city}</div>` : ''}
+            <div>📅 <strong>Data & Hora:</strong> <span style="color:#0284C7; font-weight:800">${appt ? appt.date.split('-').reverse().join('/') : ''} às ${appt ? appt.time : ''}</span></div>
+            <div>💇 <strong>Serviço:</strong> ${selectedService ? selectedService.name : ''}</div>
+            <div>💰 <strong>Valor Total:</strong> R$ ${selectedService ? parseFloat(selectedService.price).toFixed(2).replace('.', ',') : '0,00'}</div>
           </div>
 
-          <button id="btnSendWAConfirmation" class="btn btn-whatsapp w-full margin-top">
-            <i data-lucide="send"></i> Abrir Confirmação no WhatsApp
+          <button id="btnSendWAConfirmation" class="hero-whatsapp-pill" style="margin-top:1.25rem">
+            <i data-lucide="send"></i> Abrir Comprovante no WhatsApp
           </button>
 
-          <button class="btn btn-outline btn-sm w-full" style="margin-top:0.75rem" onclick="location.reload()">
+          <button class="btn btn-outline btn-sm w-full" style="margin-top:0.85rem; border-radius:14px" onclick="location.reload()">
             Fazer Outro Agendamento
           </button>
         </div>

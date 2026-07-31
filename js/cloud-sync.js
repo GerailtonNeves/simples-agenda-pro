@@ -1,5 +1,5 @@
 /* ==========================================================================
-   SIMPLES AGENDA PRO - REALTIME CLOUD SYNC ENGINE (100% SUPORTE A EXCLUSÃO DEFINITIVA)
+   SIMPLES AGENDA PRO - REALTIME CLOUD SYNC ENGINE (100% SUPORTE A EXCLUSÃO & HORÁRIOS)
    ========================================================================== */
 
 class CloudSyncEngine {
@@ -55,6 +55,17 @@ class CloudSyncEngine {
       const data = jsonResult.data ? jsonResult.data : jsonResult;
       let changesMade = false;
       let newApptsReceived = [];
+
+      // 0. Sincronizar Configurações vindas da Nuvem (Nome do Negócio, Horários de Abertura/Fechamento)
+      if (data.settings && typeof data.settings === 'object') {
+        const localSettings = window.Store.getSettings() || {};
+        if (data.settings.workStartTime || data.settings.businessName) {
+          const mergedSettings = { ...localSettings, ...data.settings };
+          if (JSON.stringify(localSettings) !== JSON.stringify(mergedSettings)) {
+            window.Store.saveSettings(mergedSettings);
+          }
+        }
+      }
 
       // 1. Sincronizar Serviços vindos da Nuvem (REMOÇÃO DEFINITIVA DE SERVIÇOS EXCLUÍDOS)
       if (data.services && Array.isArray(data.services)) {
@@ -173,11 +184,13 @@ class CloudSyncEngine {
       const localAppts = window.Store.getAppointments() || [];
       const localClients = window.Store.getClients() || [];
       const localServices = window.Store.getServices() || [];
+      const localSettings = window.Store.getSettings() || {};
 
       const payload = customData || {
         appointments: localAppts,
         clients: localClients,
         services: localServices,
+        settings: localSettings,
         lastUpdated: new Date().toISOString()
       };
 
@@ -199,6 +212,7 @@ class CloudSyncEngine {
       let cloudAppts = [];
       let cloudClients = [];
       let cloudServices = window.Store.getServices() || [];
+      let cloudSettings = window.Store.getSettings() || {};
 
       try {
         const res = await fetch(this.getApiUrl());
@@ -209,6 +223,9 @@ class CloudSyncEngine {
           cloudClients = data.clients || [];
           if (data.services && data.services.length > 0) {
             cloudServices = data.services;
+          }
+          if (data.settings) {
+            cloudSettings = data.settings;
           }
         }
       } catch (e) {}
@@ -234,6 +251,7 @@ class CloudSyncEngine {
           appointments: cloudAppts,
           clients: cloudClients,
           services: cloudServices,
+          settings: cloudSettings,
           lastUpdated: new Date().toISOString()
         })
       });

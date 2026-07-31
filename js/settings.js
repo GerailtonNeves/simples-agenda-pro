@@ -41,10 +41,16 @@ class SettingsView {
     const nameInput = document.getElementById('settingBusinessName');
     const phoneInput = document.getElementById('settingBusinessPhone');
     const addrInput = document.getElementById('settingBusinessAddress');
+    const startTimeInput = document.getElementById('settingWorkStartTime');
+    const endTimeInput = document.getElementById('settingWorkEndTime');
+    const intervalSelect = document.getElementById('settingSlotInterval');
 
     if (nameInput) nameInput.value = settings.businessName || '';
     if (phoneInput) phoneInput.value = settings.businessPhone || '';
     if (addrInput) addrInput.value = settings.businessAddress || '';
+    if (startTimeInput) startTimeInput.value = settings.workStartTime || '10:00';
+    if (endTimeInput) endTimeInput.value = settings.workEndTime || '16:00';
+    if (intervalSelect) intervalSelect.value = settings.slotInterval || '30';
 
     this.updateLogoDisplays(settings.businessLogo);
 
@@ -188,8 +194,12 @@ class SettingsView {
     settings.businessName = document.getElementById('settingBusinessName')?.value;
     settings.businessPhone = document.getElementById('settingBusinessPhone')?.value;
     settings.businessAddress = document.getElementById('settingBusinessAddress')?.value;
+    settings.workStartTime = document.getElementById('settingWorkStartTime')?.value || '10:00';
+    settings.workEndTime = document.getElementById('settingWorkEndTime')?.value || '16:00';
+    settings.slotInterval = document.getElementById('settingSlotInterval')?.value || '30';
 
     window.Store.saveSettings(settings);
+    if (window.CloudSync) window.CloudSync.pushToCloud();
 
     const brandNameDisplay = document.getElementById('brandNameDisplay');
     if (brandNameDisplay) brandNameDisplay.textContent = settings.businessName || 'Simples Agenda Pro';
@@ -198,7 +208,7 @@ class SettingsView {
       window.BookingPortal.render();
     }
 
-    window.showToast('Dados da empresa salvos com sucesso!', 'success');
+    window.showToast('Dados e horários de atendimento salvos e sincronizados com a nuvem!', 'success');
   }
 
   saveWhatsAppTemplates() {

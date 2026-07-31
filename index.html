@@ -573,8 +573,36 @@
                   </div>
                 </div>
 
+                <div style="background:var(--bg-surface-secondary); padding:1rem; border-radius:var(--radius-md); border:1px solid var(--border-color); margin-top:1rem">
+                  <h4 style="font-size:0.95rem; font-weight:800; color:var(--primary-hover); margin-bottom:0.75rem; display:flex; align-items:center; gap:0.4rem">
+                    <i data-lucide="clock" style="width:18px; height:18px"></i> Horário de Atendimento no Link Público
+                  </h4>
+                  <div class="form-row">
+                    <div class="form-group">
+                      <label class="form-label">⏰ Horário de Início (Abertura) *</label>
+                      <input type="time" id="settingWorkStartTime" class="form-control" value="10:00" required>
+                    </div>
+                    <div class="form-group">
+                      <label class="form-label">🛑 Horário de Término (Fechamento) *</label>
+                      <input type="time" id="settingWorkEndTime" class="form-control" value="16:00" required>
+                    </div>
+                    <div class="form-group">
+                      <label class="form-label">⏱️ Intervalo entre Horários</label>
+                      <select id="settingSlotInterval" class="form-control">
+                        <option value="30">30 Minutos (Padrão)</option>
+                        <option value="15">15 Minutos</option>
+                        <option value="20">20 Minutos</option>
+                        <option value="40">40 Minutos</option>
+                        <option value="45">45 Minutos</option>
+                        <option value="60">60 Minutos (1 Hora)</option>
+                      </select>
+                    </div>
+                  </div>
+                  <span class="text-muted" style="font-size:0.75rem">💡 O link público dos clientes usará exatamente estes horários para gerar as opções de agendamento!</span>
+                </div>
+
                 <button type="submit" class="btn btn-orange margin-top">
-                  <i data-lucide="save"></i> Salvar Dados da Empresa
+                  <i data-lucide="save"></i> Salvar Dados e Horários da Empresa
                 </button>
               </form>
             </div>
