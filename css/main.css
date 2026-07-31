@@ -1,19 +1,19 @@
 /* ==========================================================================
-   SIMPLES AGENDA PRO - ULTRA PREMIUM SAAS DESIGN SYSTEM (MODERN GLASS & GRADIENTS)
+   SIMPLES AGENDA PRO - AZUL CLARO & LARANJA COMMERCIAL SAAS DESIGN SYSTEM
    ========================================================================== */
 
 :root {
-  /* Core Brand Color Tokens */
+  /* Core Brand Color Tokens (Azul Claro Brilhante & Laranja Comercial) */
   --primary: #0EA5E9;             /* Sky Blue Vibrant */
   --primary-hover: #0284C7;
   --primary-dark: #0369A1;
   --primary-light: #E0F2FE;
   --primary-gradient: linear-gradient(135deg, #0284C7 0%, #0EA5E9 50%, #38BDF8 100%);
   
-  --sidebar-gradient: linear-gradient(180deg, #0F172A 0%, #1E293B 100%);
+  --sidebar-gradient: linear-gradient(180deg, #0284C7 0%, #0EA5E9 55%, #0369A1 100%);
   --header-gradient: linear-gradient(90deg, #FFFFFF 0%, #F8FAFC 100%);
 
-  --accent-orange: #F97316;       /* Vibrant Commercial Orange */
+  --accent-orange: #F97316;       /* Laranja Comercial Vívido */
   --accent-orange-hover: #EA580C;
   --accent-orange-light: #FFF7ED;
   --orange-gradient: linear-gradient(135deg, #EA580C 0%, #F97316 100%);
@@ -34,13 +34,13 @@
 
   /* Ambient Backdrop SaaS Slate & Ice Gradient */
   --bg-app: #F1F5F9;
-  --bg-app-gradient: radial-gradient(at 0% 0%, rgba(14, 165, 233, 0.08) 0px, transparent 50%),
-                     radial-gradient(at 100% 100%, rgba(249, 115, 22, 0.06) 0px, transparent 50%),
+  --bg-app-gradient: radial-gradient(at 0% 0%, rgba(14, 165, 233, 0.1) 0px, transparent 50%),
+                     radial-gradient(at 100% 100%, rgba(249, 115, 22, 0.08) 0px, transparent 50%),
                      #F8FAFC;
   --bg-surface: #FFFFFF;
   --bg-surface-secondary: #F8FAFC;
   --bg-surface-tertiary: #F1F5F9;
-  --bg-sidebar: #0F172A;
+  --bg-sidebar: #0284C7;
   
   --text-main: #0F172A;
   --text-muted: #64748B;
@@ -73,7 +73,7 @@
   --bg-surface: #1E293B;
   --bg-surface-secondary: #0F172A;
   --bg-surface-tertiary: #334155;
-  --bg-sidebar: #090D16;
+  --bg-sidebar: #0369A1;
   
   --text-main: #F8FAFC;
   --text-muted: #94A3B8;
@@ -114,17 +114,17 @@ html, body {
   overflow: hidden;
 }
 
-/* Sidebar Responsive Styles (Ultra Dark Premium Slate) */
+/* Sidebar Responsive Styles (Vibrante Azul Claro) */
 .sidebar {
   width: 270px;
   background: var(--sidebar-gradient);
   color: #FFFFFF;
   display: flex;
   flex-direction: column;
-  border-right: 1px solid rgba(255, 255, 255, 0.08);
+  border-right: 1px solid rgba(255, 255, 255, 0.2);
   transition: all var(--transition-normal);
   z-index: 90;
-  box-shadow: 6px 0 25px rgba(15, 23, 42, 0.25);
+  box-shadow: 4px 0 20px rgba(2, 132, 199, 0.2);
 }
 
 .sidebar-header {
@@ -132,7 +132,7 @@ html, body {
   display: flex;
   align-items: center;
   gap: 0.85rem;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.2);
 }
 
 .logo-container {
@@ -144,9 +144,9 @@ html, body {
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.2);
   flex-shrink: 0;
-  border: 2px solid rgba(255, 255, 255, 0.2);
+  border: 2px solid rgba(255, 255, 255, 0.4);
 }
 
 .logo-placeholder {
@@ -200,7 +200,7 @@ html, body {
 
 .brand-subtitle {
   font-size: 0.725rem;
-  color: #38BDF8;
+  color: #E0F2FE;
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.05em;
@@ -223,7 +223,7 @@ html, body {
   border-radius: var(--radius-md);
   border: none;
   background: transparent;
-  color: #94A3B8;
+  color: #E0F2FE;
   font-size: 0.925rem;
   font-weight: 700;
   cursor: pointer;
@@ -235,21 +235,21 @@ html, body {
 }
 
 .nav-item:hover {
-  background: rgba(255, 255, 255, 0.08);
-  color: #F8FAFC;
+  background: rgba(255, 255, 255, 0.2);
+  color: #FFFFFF;
   transform: translateX(3px);
 }
 
 .nav-item.active {
-  background: var(--primary-gradient);
-  color: #FFFFFF;
-  font-weight: 800;
-  box-shadow: var(--shadow-glow-primary);
+  background: #FFFFFF;
+  color: #0284C7;
+  font-weight: 900;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
 }
 
 .sidebar-footer {
   padding: 1.15rem 0.85rem;
-  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  border-top: 1px solid rgba(255, 255, 255, 0.2);
   display: flex;
   flex-direction: column;
   gap: 0.75rem;

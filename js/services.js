@@ -70,7 +70,7 @@ class ServicesView {
       grid.innerHTML = `
         <div class="card text-center" style="grid-column: 1 / -1; padding: 2.5rem;">
           <i data-lucide="scissors" style="width:48px; height:48px; color:var(--text-muted); margin-bottom:0.75rem;"></i>
-          <p class="text-muted">Nenhum serviço encontrado.</p>
+          <p class="text-muted">Nenhum serviço cadastrado.</p>
           <button class="btn btn-orange btn-sm margin-top" onclick="window.App.openServiceModal()">
             + Cadastrar Novo Serviço
           </button>
@@ -83,18 +83,18 @@ class ServicesView {
     filtered.forEach(srv => {
       const card = document.createElement('div');
       card.className = 'service-card';
-      card.style.borderLeft = `6px solid ${srv.color || '#0EA5E9'}`;
+      card.style.borderTop = `5px solid ${srv.color || '#0EA5E9'}`;
 
       card.innerHTML = `
         <div>
           <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:0.5rem">
             <div>
-              <h4 style="font-size:1.15rem; font-weight:800; color:var(--text-main)">${srv.name}</h4>
-              <span class="badge badge-warning" style="background:#E0F2FE; color:#0284C7; border:1px solid #7DD3FC; font-size:0.75rem; margin-top:4px">
+              <h4 style="font-size:1.15rem; font-weight:900; color:var(--text-main); margin-bottom:6px">${srv.name}</h4>
+              <span class="badge" style="background:#E0F2FE; color:#0284C7; border:1px solid #7DD3FC; font-size:0.775rem; font-weight:800">
                 ⏱️ ${srv.duration} minutos de duração
               </span>
             </div>
-            <div style="font-size:1.35rem; font-weight:800; color:var(--primary); text-align:right">
+            <div style="font-size:1.35rem; font-weight:900; color:var(--primary); text-align:right">
               R$ ${parseFloat(srv.price).toFixed(2).replace('.', ',')}
             </div>
           </div>
@@ -187,13 +187,13 @@ class ServicesView {
 
       if (stock === 0) {
         statusBadge = `<span class="badge badge-danger">🔴 ESGOTADO (0 un)</span>`;
-        borderStyle = 'border-left: 6px solid var(--danger);';
+        borderStyle = 'border-top: 5px solid var(--danger);';
       } else if (stock <= minStock) {
         statusBadge = `<span class="badge badge-warning">⚠️ Estoque Baixo (${stock} un)</span>`;
-        borderStyle = 'border-left: 6px solid var(--warning);';
+        borderStyle = 'border-top: 5px solid var(--warning);';
       } else {
         statusBadge = `<span class="badge badge-success">🟢 Em Estoque (${stock} un)</span>`;
-        borderStyle = 'border-left: 6px solid var(--success);';
+        borderStyle = 'border-top: 5px solid var(--success);';
       }
 
       const card = document.createElement('div');
@@ -204,7 +204,7 @@ class ServicesView {
         <div>
           <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:0.5rem">
             <div>
-              <h4 style="font-size:1.15rem; font-weight:800; color:var(--text-main)">${prod.name}</h4>
+              <h4 style="font-size:1.15rem; font-weight:900; color:var(--text-main); margin-bottom:4px">${prod.name}</h4>
               <span class="text-muted" style="font-size:0.775rem">${prod.category || 'Geral'} ${prod.sku ? `• SKU: ${prod.sku}` : ''}</span>
             </div>
             ${statusBadge}
