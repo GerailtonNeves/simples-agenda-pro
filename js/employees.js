@@ -194,6 +194,8 @@ class EmployeesView {
     }
 
     window.Store.saveEmployees(employees);
+    if (window.CloudSync) window.CloudSync.pushToCloud();
+
     window.showToast(`Funcionário "${name}" salvo com sucesso!`, 'success');
     document.getElementById('modalEmployee')?.classList.remove('active');
 
@@ -205,6 +207,8 @@ class EmployeesView {
       let employees = window.Store.getEmployees() || [];
       employees = employees.filter(e => e.id !== id);
       window.Store.saveEmployees(employees);
+      if (window.CloudSync) window.CloudSync.pushToCloud();
+
       window.showToast('Funcionário removido.', 'warning');
       this.render();
     }

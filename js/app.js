@@ -591,6 +591,7 @@ class AppController {
         let appts = window.Store.getAppointments();
         appts = appts.filter(a => a.id !== id);
         window.Store.saveAppointments(appts);
+        if (window.CloudSync) window.CloudSync.pushToCloud();
 
         window.showToast('Agendamento excluído com sucesso!', 'success');
         document.getElementById('modalAppointment')?.classList.remove('active');
