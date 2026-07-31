@@ -449,10 +449,11 @@
       container.innerHTML = html;
     }
 
-    function selectService(srvId) {
+    async function selectService(srvId) {
       const services = window.Store.getServices();
       selectedService = services.find(s => s.id === srvId);
       currentStep = 2;
+      if (window.CloudSync) await window.CloudSync.pollFromCloud();
       renderStep();
     }
 
@@ -462,10 +463,12 @@
       const endT = settings.workEndTime || '16:00';
 
       const availableTimes = generateDynamicTimeSlots();
+      
+      // Filtra agendamentos ativos na data selecionada (desconsiderando agendamentos deletados/cancelados)
       const apptsOnDate = window.Store.getAppointments().filter(a => a.date === selectedDate && a.status !== 'cancelled');
       const occupiedTimes = new Set(apptsOnDate.map(a => a.time));
 
-      // Verifica se a data inteira está ocupada
+      // Verifica se a data inteira está ocupada por agendamento exclusivo de Dia Inteiro
       const isAnyOccupied = occupiedTimes.size > 0;
       const isFullDayTaken = occupiedTimes.has('Dia Inteiro') || apptsOnDate.some(a => a.notes && a.notes.includes('Dia Inteiro'));
 
@@ -521,10 +524,11 @@
       html += `</div></div>`;
       container.innerHTML = html;
 
-      document.getElementById('dateSelector').onchange = (e) => {
+      document.getElementById('dateSelector').onchange = async (e) => {
         selectedDate = e.target.value;
         selectedTime = null;
         isFullDayBooking = false;
+        if (window.CloudSync) await window.CloudSync.pollFromCloud();
         renderStep2(container);
       };
     }
@@ -586,14 +590,17 @@
 
       container.innerHTML = html;
 
-      document.getElementById('publicBookingForm').onsubmit = (e) => {
+      document.getElementById('publicBookingForm').onsubmit = async (e) => {
         e.preventDefault();
+
+        // Re-sincronizar nuvem para ter certeza do estado em tempo real
+        if (window.CloudSync) await window.CloudSync.pollFromCloud();
 
         // Validação final de conflito de horário antes de salvar
         const currentAppts = window.Store.getAppointments();
         const conflict = currentAppts.find(a => a.date === selectedDate && a.time === selectedTime && a.status !== 'cancelled');
         if (conflict) {
-          alert(`⚠️ Ops! O horário ${selectedTime} na data ${selectedDate.split('-').reverse().join('/')} acabou de ser ocupado. Escolha outro horário.`);
+          alert(`⚠️ Ops! O horário ${selectedTime} na data ${selectedDate.split('-').reverse().join('/')} acabou de ser ocupado por outro cliente. Por favor, volte e escolha outro horário.`);
           currentStep = 2;
           renderStep();
           return;
@@ -639,7 +646,7 @@
 
         // SINCRONIZAR COM A NUVEM EM TEMPO REAL PARA QUALQUER CELULAR OU PC NO MUNDO
         if (window.CloudSync) {
-          window.CloudSync.sendPublicBooking(newAppt, client);
+          await window.CloudSync.sendPublicBooking(newAppt, client);
         }
 
         // DISPARAR SOM DE AVISO BIP!
