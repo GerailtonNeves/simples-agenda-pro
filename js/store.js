@@ -52,23 +52,39 @@ class StoreManager {
     if (!localStorage.getItem(STORAGE_KEYS.SETTINGS)) {
       this.save(STORAGE_KEYS.SETTINGS, DEFAULT_SEED_DATA.settings);
     }
-    if (!localStorage.getItem(STORAGE_KEYS.SERVICES)) {
-      this.save(STORAGE_KEYS.SERVICES, DEFAULT_SEED_DATA.services);
+    
+    // Auto-limpeza de serviços demonstrativos legados (srv-1, srv-2, srv-3, srv-4, srv-5)
+    let services = this.get(STORAGE_KEYS.SERVICES);
+    if (!services || (Array.isArray(services) && services.some(s => ['srv-1', 'srv-2', 'srv-3', 'srv-4', 'srv-5'].includes(s.id)))) {
+      this.save(STORAGE_KEYS.SERVICES, []);
     }
-    if (!localStorage.getItem(STORAGE_KEYS.PRODUCTS)) {
-      this.save(STORAGE_KEYS.PRODUCTS, DEFAULT_SEED_DATA.products);
+
+    // Auto-limpeza de produtos demonstrativos legados
+    let products = this.get(STORAGE_KEYS.PRODUCTS);
+    if (!products || (Array.isArray(products) && products.some(p => ['prod-1', 'prod-2', 'prod-3'].includes(p.id)))) {
+      this.save(STORAGE_KEYS.PRODUCTS, []);
     }
-    if (!localStorage.getItem(STORAGE_KEYS.EMPLOYEES)) {
-      this.save(STORAGE_KEYS.EMPLOYEES, DEFAULT_SEED_DATA.employees);
+
+    // Auto-limpeza de funcionários demonstrativos legados
+    let employees = this.get(STORAGE_KEYS.EMPLOYEES);
+    if (!employees || (Array.isArray(employees) && employees.some(e => ['emp-1', 'emp-2'].includes(e.id)))) {
+      this.save(STORAGE_KEYS.EMPLOYEES, []);
     }
-    if (!localStorage.getItem(STORAGE_KEYS.CLIENTS)) {
-      this.save(STORAGE_KEYS.CLIENTS, DEFAULT_SEED_DATA.clients);
+
+    // Auto-limpeza de clientes demonstrativos legados
+    let clients = this.get(STORAGE_KEYS.CLIENTS);
+    if (!clients || (Array.isArray(clients) && clients.some(c => ['cli-1', 'cli-2', 'cli-3'].includes(c.id)))) {
+      this.save(STORAGE_KEYS.CLIENTS, []);
     }
-    if (!localStorage.getItem(STORAGE_KEYS.APPOINTMENTS)) {
-      this.save(STORAGE_KEYS.APPOINTMENTS, DEFAULT_SEED_DATA.appointments);
+
+    // Auto-limpeza de agendamentos demonstrativos legados
+    let appointments = this.get(STORAGE_KEYS.APPOINTMENTS);
+    if (!appointments || (Array.isArray(appointments) && appointments.some(a => ['app-1', 'app-2', 'app-3'].includes(a.id)))) {
+      this.save(STORAGE_KEYS.APPOINTMENTS, []);
     }
+
     if (!localStorage.getItem(STORAGE_KEYS.TRANSACTIONS)) {
-      this.save(STORAGE_KEYS.TRANSACTIONS, DEFAULT_SEED_DATA.transactions);
+      this.save(STORAGE_KEYS.TRANSACTIONS, []);
     }
   }
 
