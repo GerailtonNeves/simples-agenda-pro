@@ -52,38 +52,36 @@ class StoreManager {
     if (!localStorage.getItem(STORAGE_KEYS.SETTINGS)) {
       this.save(STORAGE_KEYS.SETTINGS, DEFAULT_SEED_DATA.settings);
     }
-    
-    // Auto-limpeza de serviços demonstrativos legados (srv-1, srv-2, srv-3, srv-4, srv-5)
+
+    // Expurgo completo obrigatório de qualquer dado demonstrativo ou fictício de terceiros
+    const legacyServiceNames = ['Corte de Cabelo Masculino / Feminino', 'Barba Completa com Toalha Quente', 'Combo Corte + Barba VIP', 'Manicure & Pedicure', 'Limpeza de Pele Profunda'];
     let services = this.get(STORAGE_KEYS.SERVICES);
-    if (!services || (Array.isArray(services) && services.some(s => ['srv-1', 'srv-2', 'srv-3', 'srv-4', 'srv-5'].includes(s.id)))) {
+    if (!services || (Array.isArray(services) && services.some(s => ['srv-1', 'srv-2', 'srv-3', 'srv-4', 'srv-5'].includes(s.id) || legacyServiceNames.includes(s.name)))) {
       this.save(STORAGE_KEYS.SERVICES, []);
     }
 
-    // Auto-limpeza de produtos demonstrativos legados
     let products = this.get(STORAGE_KEYS.PRODUCTS);
-    if (!products || (Array.isArray(products) && products.some(p => ['prod-1', 'prod-2', 'prod-3'].includes(p.id)))) {
+    if (!products || (Array.isArray(products) && products.some(p => ['prod-1', 'prod-2', 'prod-3'].includes(p.id) || (p.name && p.name.includes('Pomada'))))) {
       this.save(STORAGE_KEYS.PRODUCTS, []);
     }
 
-    // Auto-limpeza de funcionários demonstrativos legados
     let employees = this.get(STORAGE_KEYS.EMPLOYEES);
-    if (!employees || (Array.isArray(employees) && employees.some(e => ['emp-1', 'emp-2'].includes(e.id)))) {
+    if (!employees || (Array.isArray(employees) && employees.some(e => ['emp-1', 'emp-2'].includes(e.id) || (e.name && (e.name.includes('Alexandre') || e.name.includes('Mariana')))))) {
       this.save(STORAGE_KEYS.EMPLOYEES, []);
     }
 
-    // Auto-limpeza de clientes demonstrativos legados
     let clients = this.get(STORAGE_KEYS.CLIENTS);
-    if (!clients || (Array.isArray(clients) && clients.some(c => ['cli-1', 'cli-2', 'cli-3'].includes(c.id)))) {
+    if (!clients || (Array.isArray(clients) && clients.some(c => ['cli-1', 'cli-2', 'cli-3'].includes(c.id) || (c.name && (c.name.includes('Carlos Eduardo') || c.name.includes('Juliana')))))) {
       this.save(STORAGE_KEYS.CLIENTS, []);
     }
 
-    // Auto-limpeza de agendamentos demonstrativos legados
     let appointments = this.get(STORAGE_KEYS.APPOINTMENTS);
     if (!appointments || (Array.isArray(appointments) && appointments.some(a => ['app-1', 'app-2', 'app-3'].includes(a.id)))) {
       this.save(STORAGE_KEYS.APPOINTMENTS, []);
     }
 
-    if (!localStorage.getItem(STORAGE_KEYS.TRANSACTIONS)) {
+    let transactions = this.get(STORAGE_KEYS.TRANSACTIONS);
+    if (!transactions || (Array.isArray(transactions) && transactions.some(t => ['tr-1', 'tr-2'].includes(t.id)))) {
       this.save(STORAGE_KEYS.TRANSACTIONS, []);
     }
   }
