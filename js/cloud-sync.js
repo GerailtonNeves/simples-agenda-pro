@@ -1,12 +1,12 @@
 /* ==========================================================================
-   SIMPLES AGENDA PRO - PERMANENT REALTIME CLOUD SYNC ENGINE (API.RESTFUL-API.DEV)
+   SIMPLES AGENDA PRO - REALTIME CLOUD SYNC ENGINE
    ========================================================================== */
 
 class CloudSyncEngine {
   constructor() {
-    // ID da nuvem permanente compartilhado para sincronização entre qualquer celular ou computador no mundo
-    this.defaultCloudId = 'ff8081819f7e10ae019fb9d8ebc55950';
-    this.endpoint = 'https://api.restful-api.dev/objects/';
+    // ID da nuvem global compartilhado para sincronização em tempo real
+    this.defaultCloudId = '019fb9e9-5858-7525-979a-745b0d36df6f';
+    this.endpoint = 'https://jsonblob.com/api/jsonBlob/';
     this.pollingInterval = null;
     this.isSyncing = false;
   }
@@ -50,13 +50,15 @@ class CloudSyncEngine {
       }
 
       const jsonResult = await response.json();
-      if (!jsonResult || !jsonResult.data) {
+      if (!jsonResult) {
         this.isSyncing = false;
         return;
       }
 
-      const data = jsonResult.data;
+      // Suporta estrutura com ou sem wrapper .data
+      const data = jsonResult.data ? jsonResult.data : jsonResult;
       let changesMade = false;
+      let newApptsReceived = [];
 
       // 1. Sincronizar Clientes vindos da Nuvem
       if (data.clients && Array.isArray(data.clients)) {
@@ -81,7 +83,6 @@ class CloudSyncEngine {
       // 2. Sincronizar Agendamentos vindos da Nuvem
       if (data.appointments && Array.isArray(data.appointments)) {
         let localAppts = window.Store.getAppointments() || [];
-        let latestNewApptFromCloud = null;
 
         data.appointments.forEach(remoteAppt => {
           const localIdx = localAppts.findIndex(a => a.id === remoteAppt.id);
@@ -89,7 +90,7 @@ class CloudSyncEngine {
           if (localIdx === -1) {
             // Novo agendamento feito pelo cliente na internet!
             localAppts.push(remoteAppt);
-            latestNewApptFromCloud = remoteAppt;
+            newApptsReceived.push(remoteAppt);
             changesMade = true;
           } else {
             // Se o status mudou na nuvem
@@ -106,16 +107,18 @@ class CloudSyncEngine {
           if (window.App) window.App.updateAlertCenterBadge();
         }
 
-        // Se detectou um novo agendamento vindo de outro celular na internet
-        if (latestNewApptFromCloud && window.App) {
-          if (!window.App.knownApptIds.has(latestNewApptFromCloud.id)) {
-            window.App.knownApptIds.add(latestNewApptFromCloud.id);
-            window.App.triggerNewApptAlert(latestNewApptFromCloud);
-          }
+        // Se detectou novos agendamentos vindos do celular dos clientes
+        if (newApptsReceived.length > 0 && window.App) {
+          newApptsReceived.forEach(newAppt => {
+            if (!window.App.knownApptIds.has(newAppt.id)) {
+              window.App.knownApptIds.add(newAppt.id);
+              window.App.triggerNewApptAlert(newAppt);
+            }
+          });
         }
       }
     } catch (err) {
-      // Falha silenciosa se offline
+      console.warn('Status da Nuvem:', err);
     } finally {
       this.isSyncing = false;
     }
@@ -127,7 +130,7 @@ class CloudSyncEngine {
       const localAppts = window.Store.getAppointments() || [];
       const localClients = window.Store.getClients() || [];
 
-      const payloadData = customData || {
+      const payload = customData || {
         appointments: localAppts,
         clients: localClients,
         lastUpdated: new Date().toISOString()
@@ -139,10 +142,7 @@ class CloudSyncEngine {
           'Content-Type': 'application/json',
           'Accept': 'application/json'
         },
-        body: JSON.stringify({
-          name: "SimplesAgendaCloud",
-          data: payloadData
-        })
+        body: JSON.stringify(payload)
       });
     } catch (err) {
       console.warn('Erro ao enviar dados para a Nuvem:', err);
@@ -159,24 +159,20 @@ class CloudSyncEngine {
         const res = await fetch(this.getApiUrl());
         if (res.ok) {
           const jsonResult = await res.json();
-          if (jsonResult && jsonResult.data) {
-            cloudAppts = jsonResult.data.appointments || [];
-            cloudClients = jsonResult.data.clients || [];
-          }
+          const data = jsonResult ? (jsonResult.data ? jsonResult.data : jsonResult) : {};
+          cloudAppts = data.appointments || [];
+          cloudClients = data.clients || [];
         }
       } catch (e) {}
 
-      // Adicionar novo cliente se não existir
       if (newClient && !cloudClients.some(c => c.id === newClient.id)) {
         cloudClients.push(newClient);
       }
 
-      // Adicionar novo agendamento
       if (!cloudAppts.some(a => a.id === newAppt.id)) {
         cloudAppts.push(newAppt);
       }
 
-      // Salvar na nuvem compartilhada
       await fetch(this.getApiUrl(), {
         method: 'PUT',
         headers: {
@@ -184,12 +180,9 @@ class CloudSyncEngine {
           'Accept': 'application/json'
         },
         body: JSON.stringify({
-          name: "SimplesAgendaCloud",
-          data: {
-            appointments: cloudAppts,
-            clients: cloudClients,
-            lastUpdated: new Date().toISOString()
-          }
+          appointments: cloudAppts,
+          clients: cloudClients,
+          lastUpdated: new Date().toISOString()
         })
       });
     } catch (err) {
