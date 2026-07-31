@@ -1,5 +1,5 @@
 /* ==========================================================================
-   SIMPLES AGENDA PRO - STORE & LOCALSTORAGE PERSISTENCE (AZUL & LARANJA)
+   SIMPLES AGENDA PRO - STORE & LOCALSTORAGE PERSISTENCE (100% LIMPO SEM DADOS DE TERCEIROS)
    ========================================================================== */
 
 const STORAGE_KEYS = {
@@ -13,12 +13,12 @@ const STORAGE_KEYS = {
   THEME: 'simples_agenda_theme'
 };
 
-// Dados Iniciais Sem Agendamentos Fictícios
+// Configurações Iniciais Sem Dados Fictícios de Terceiros
 const DEFAULT_SEED_DATA = {
   settings: {
-    businessName: 'Meu Estabelecimento / Barbearia VIP',
-    businessPhone: '5511999887766',
-    businessAddress: 'Av. Principal, 1000',
+    businessName: 'Meu Estabelecimento Comercial',
+    businessPhone: '',
+    businessAddress: '',
     businessLogo: '',
     whatsappTemplates: {
       created: 'Olá {cliente}! Seu agendamento para *{servico}* na *{empresa}* foi realizado com sucesso para o dia *{data}* às *{horario}*.\n\nValor: R$ {valor}.\nAguardamos você!',
@@ -26,17 +26,9 @@ const DEFAULT_SEED_DATA = {
       birthday: '🎉 Parabéns, {cliente}! A equipe da *{empresa}* deseja a você um feliz aniversário! Venha celebrar conosco e ganhe 15% de desconto no seu próximo serviço!'
     }
   },
-  services: [
-    { id: 'srv-1', name: 'Corte de Cabelo Masculino / Feminino', duration: 40, price: 60.00, color: '#0EA5E9' },
-    { id: 'srv-2', name: 'Barba Completa com Toalha Quente', duration: 30, price: 40.00, color: '#F97316' },
-    { id: 'srv-3', name: 'Combo Corte + Barba VIP', duration: 60, price: 90.00, color: '#8B5CF6' }
-  ],
-  products: [
-    { id: 'prod-1', name: 'Pomada Modeladora Matte 100g', price: 45.00, stock: 10, minStock: 5 }
-  ],
-  employees: [
-    { id: 'emp-1', name: 'Profissional Principal', role: 'Atendimento', phone: '11988887777', workDays: 'Segunda a Sábado', workHours: '08:00 às 19:00', commissionRate: 50 }
-  ],
+  services: [],
+  products: [],
+  employees: [],
   clients: [],
   appointments: [],
   transactions: []
