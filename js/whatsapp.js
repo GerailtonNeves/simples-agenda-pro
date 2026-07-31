@@ -78,7 +78,7 @@ class WhatsAppEngine {
     }
 
     const businessName = settings.businessName || 'Nossa Empresa';
-    const todayStr = new Date().toISOString().split('T')[0];
+    const todayStr = window.getLocalDateStr();
 
     // Busca todos os agendamentos futuros não cancelados do mesmo cliente
     const clientAppts = allAppts.filter(a =>
@@ -137,7 +137,7 @@ class WhatsAppEngine {
     }
 
     const businessName = settings.businessName || 'Nossa Empresa';
-    const todayStr = new Date().toISOString().split('T')[0];
+    const todayStr = window.getLocalDateStr();
 
     const clientAppts = allAppts.filter(a =>
       a.clientId === appointment.clientId &&

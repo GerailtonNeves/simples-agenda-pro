@@ -1,13 +1,18 @@
 {
   "name": "simples-agenda-pro",
-  "version": "2.0.0",
-  "description": "Sistema Comercial de Gestão & Agendamentos Online com WhatsApp",
+  "version": "1.0.0",
+  "description": "Sistema Comercial de Agendamentos e Gestão Multiplataforma com WhatsApp",
   "main": "index.html",
   "scripts": {
-    "start": "serve .",
-    "dev": "serve ."
+    "start": "npx http-server ./ -p 8080",
+    "deploy": "npx vercel --prod"
   },
-  "keywords": ["agenda", "barbearia", "salao", "clinica", "agendamento-online"],
+  "keywords": [
+    "agenda",
+    "saas",
+    "whatsapp",
+    "agendamento"
+  ],
   "author": "Simples Agenda Pro",
   "license": "MIT"
 }

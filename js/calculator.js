@@ -103,6 +103,7 @@ class CalculatorEngine {
       if (!this.expression) return;
       try {
         const fullExpr = this.expression + this.displayValue;
+        // Avaliação segura de expressões aritméticas simples
         const sanitized = fullExpr.replace(/[^0-9\+\-\*\/\.]/g, '');
         const result = Function(`"use strict"; return (${sanitized})`)();
         

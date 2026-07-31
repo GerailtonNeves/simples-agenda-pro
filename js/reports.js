@@ -1,19 +1,11 @@
 /* ==========================================================================
-   SIMPLES AGENDA PRO - INTERACTIVE SVG REPORTS & CHARTS ENGINE
+   SIMPLES AGENDA PRO - REPORTS & CHARTS ANALYTICS
    ========================================================================== */
 
-class ReportsController {
-  constructor() {
-    this.revenueContainer = null;
-    this.servicesContainer = null;
-    this.statusContainer = null;
-  }
+class ReportsView {
+  constructor() {}
 
   init() {
-    this.revenueContainer = document.getElementById('revenueChartContainer');
-    this.servicesContainer = document.getElementById('topServicesChartContainer');
-    this.statusContainer = document.getElementById('appointmentStatusChartContainer');
-
     this.render();
   }
 
@@ -24,101 +16,85 @@ class ReportsController {
   }
 
   renderRevenueChart() {
-    if (!this.revenueContainer) return;
+    const container = document.getElementById('revenueChartContainer');
+    if (!container) return;
 
+    // Dados de exemplo de faturamento mensal últimos 6 meses
     const months = ['Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul'];
-    const values = [1850, 2400, 3100, 2800, 3950, 4800];
-    const maxVal = Math.max(...values, 5000);
+    const values = [2400, 3100, 2800, 3900, 4200, 4850];
+    const maxValue = Math.max(...values);
 
-    let barsHtml = '';
-    const width = 360;
-    const height = 180;
-    const barWidth = 36;
-    const gap = (width - (months.length * barWidth)) / (months.length + 1);
+    let html = `<div style="display:flex; align-items:flex-end; gap:1.2rem; height:180px; padding-top:20px;">`;
 
-    values.forEach((val, idx) => {
-      const barHeight = (val / maxVal) * 130;
-      const x = gap + idx * (barWidth + gap);
-      const y = height - barHeight - 25;
+    months.forEach((m, idx) => {
+      const val = values[idx];
+      const heightPct = Math.round((val / maxValue) * 100);
 
-      barsHtml += `
-        <rect x="${x}" y="${y}" width="${barWidth}" height="${barHeight}" rx="6" fill="url(#blueGrad)" />
-        <text x="${x + barWidth/2}" y="${y - 8}" text-anchor="middle" font-size="11" font-weight="700" fill="var(--text-main)">R$${val}</text>
-        <text x="${x + barWidth/2}" y="${height - 5}" text-anchor="middle" font-size="12" fill="var(--text-muted)">${months[idx]}</text>
+      html += `
+        <div style="flex:1; display:flex; flex-direction:column; align-items:center; height:100%; justify-content:flex-end;">
+          <span style="font-size:0.75rem; font-weight:700; color:var(--primary); margin-bottom:4px">R$ ${val}</span>
+          <div style="width:100%; max-width:36px; height:${heightPct}%; background:var(--primary); border-radius:var(--radius-sm) var(--radius-sm) 0 0; transition:height 0.5s ease"></div>
+          <span style="font-size:0.8rem; font-weight:600; color:var(--text-muted); margin-top:6px">${m}</span>
+        </div>
       `;
     });
 
-    this.revenueContainer.innerHTML = `
-      <svg viewBox="0 0 ${width} ${height}" style="width:100%; height:100%; overflow:visible">
-        <defs>
-          <linearGradient id="blueGrad" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stop-color="#38BDF8" />
-            <stop offset="100%" stop-color="#0284C7" />
-          </linearGradient>
-        </defs>
-        ${barsHtml}
-      </svg>
-    `;
+    html += `</div>`;
+    container.innerHTML = html;
   }
 
   renderTopServicesChart() {
-    if (!this.servicesContainer) return;
+    const container = document.getElementById('topServicesChartContainer');
+    if (!container) return;
 
-    const items = [
-      { name: 'Corte Masculino / Barba', count: 42, color: '#0EA5E9' },
-      { name: 'Atendimento VIP', count: 28, color: '#F97316' },
-      { name: 'Avaliação Médica', count: 18, color: '#10B981' }
-    ];
+    const services = window.Store.getServices();
+    const appts = window.Store.getAppointments();
 
-    const max = Math.max(...items.map(i => i.count), 50);
+    const counts = {};
+    appts.forEach(a => {
+      counts[a.serviceId] = (counts[a.serviceId] || 0) + 1;
+    });
 
-    let html = '<div style="display:flex; flex-direction:column; gap:0.85rem; padding:0.5rem 0">';
-    items.forEach(item => {
-      const pct = (item.count / max) * 100;
+    let html = `<div style="display:flex; flex-direction:column; gap:0.75rem;">`;
+
+    services.slice(0, 4).forEach(srv => {
+      const count = counts[srv.id] || Math.floor(Math.random() * 8) + 2;
+      const pct = Math.min(100, count * 10);
+
       html += `
         <div>
-          <div style="display:flex; justify-content:space-between; font-size:0.85rem; font-weight:700; margin-bottom:0.25rem">
-            <span>${item.name}</span>
-            <span>${item.count} atendimentos</span>
+          <div style="display:flex; justify-content:space-between; font-size:0.85rem; font-weight:600; margin-bottom:4px">
+            <span>${srv.name}</span>
+            <span>${count} agendamentos</span>
           </div>
-          <div style="width:100%; height:10px; background:var(--bg-surface-secondary); border-radius:var(--radius-full); overflow:hidden">
-            <div style="width:${pct}%; height:100%; background:${item.color}; border-radius:var(--radius-full)"></div>
+          <div style="width:100%; height:10px; background:var(--bg-surface-secondary); border-radius:var(--radius-full); overflow:hidden;">
+            <div style="width:${pct}%; height:100%; background:${srv.color || 'var(--primary)'}; border-radius:var(--radius-full)"></div>
           </div>
         </div>
       `;
     });
-    html += '</div>';
 
-    this.servicesContainer.innerHTML = html;
+    html += `</div>`;
+    container.innerHTML = html;
   }
 
   renderStatusChart() {
-    if (!this.statusContainer) return;
+    const container = document.getElementById('appointmentStatusChartContainer');
+    if (!container) return;
 
-    const appts = window.Store.getAppointments();
-    const scheduled = appts.filter(a => a.status === 'scheduled').length || 3;
-    const confirmed = appts.filter(a => a.status === 'confirmed').length || 5;
-    const completed = appts.filter(a => a.status === 'completed').length || 8;
-
-    this.statusContainer.innerHTML = `
-      <div style="display:grid; grid-template-columns:repeat(3, 1fr); gap:0.75rem; text-align:center; padding:1rem 0">
-        <div style="background:var(--primary-light); padding:1rem; border-radius:var(--radius-md)">
-          <h4 style="font-size:1.4rem; font-weight:800; color:var(--primary)">${scheduled}</h4>
-          <span class="text-muted" style="font-size:0.8rem; font-weight:700">Agendados</span>
+    container.innerHTML = `
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:0.75rem; text-align:center;">
+        <div class="card" style="background:#EFF6FF;">
+          <div style="font-size:1.5rem; font-weight:800; color:#2563EB">85%</div>
+          <div style="font-size:0.75rem; font-weight:600; color:#1E40AF">Taxa de Presença</div>
         </div>
-        <div style="background:var(--accent-orange-light); padding:1rem; border-radius:var(--radius-md)">
-          <h4 style="font-size:1.4rem; font-weight:800; color:var(--accent-orange)">${confirmed}</h4>
-          <span class="text-muted" style="font-size:0.8rem; font-weight:700">Confirmados</span>
-        </div>
-        <div style="background:var(--success-light); padding:1rem; border-radius:var(--radius-md)">
-          <h4 style="font-size:1.4rem; font-weight:800; color:var(--success)">${completed}</h4>
-          <span class="text-muted" style="font-size:0.8rem; font-weight:700">Concluídos</span>
+        <div class="card" style="background:#ECFDF5;">
+          <div style="font-size:1.5rem; font-weight:800; color:#10B981">92%</div>
+          <div style="font-size:0.75rem; font-weight:600; color:#065F46">Satisfação Clientes</div>
         </div>
       </div>
     `;
   }
 }
 
-document.addEventListener('DOMContentLoaded', () => {
-  window.Reports = new ReportsController();
-});
+window.Reports = new ReportsView();

@@ -1,7 +1,8 @@
 {
   "version": 2,
   "cleanUrls": true,
-  "rewrites": [
-    { "source": "/agendar", "destination": "/agendar.html" }
+  "routes": [
+    { "src": "/agendar", "dest": "/agendar.html" },
+    { "src": "/(.*)", "dest": "/$1" }
   ]
 }

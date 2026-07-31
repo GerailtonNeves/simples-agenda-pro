@@ -117,7 +117,7 @@ class EmployeesView {
             </div>
 
             <div style="display:flex; gap:0.5rem; margin-top:0.5rem">
-              <button class="btn btn-outline btn-xs" style="flex:1" onclick="window.Employees.openEmployeeModal(window.Store.getEmployees().find(e=>e.id==='${emp.id}'))">
+              <button class="btn btn-outline btn-xs style="flex:1" onclick="window.Employees.openEmployeeModal(window.Store.getEmployees().find(e=>e.id==='${emp.id}'))">
                 <i data-lucide="edit-3"></i> Editar
               </button>
               <button class="btn btn-whatsapp btn-xs" onclick="window.WhatsApp.getWhatsAppUrl('${emp.phone || ''}', 'Olá ${emp.name}! Segue o resumo das suas comissões acumuladas: R$ ${totalCommissionEarned.toFixed(2).replace('.', ',')}')">

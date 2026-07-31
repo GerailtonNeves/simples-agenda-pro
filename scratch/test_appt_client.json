@@ -1,0 +1,22 @@
+{
+  "appointments": [
+    {
+      "id": "app-test-200",
+      "clientId": "cli-test-200",
+      "serviceId": "srv-1",
+      "date": "2026-08-01",
+      "time": "15:00",
+      "price": 60.00,
+      "status": "scheduled",
+      "notes": "Cliente agendou via Portal Público Online"
+    }
+  ],
+  "clients": [
+    {
+      "id": "cli-test-200",
+      "name": "Maria Oliveira Teste",
+      "phone": "(11) 98888-7777"
+    }
+  ],
+  "lastUpdated": "2026-07-31T20:43:00.000Z"
+}

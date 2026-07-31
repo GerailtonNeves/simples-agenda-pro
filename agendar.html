@@ -208,9 +208,9 @@
       } catch (e) {}
     }
 
-    document.addEventListener('DOMContentLoaded', () => {
+    document.addEventListener('DOMContentLoaded', async () => {
       loadBusinessProfile();
-      if (window.CloudSync) window.CloudSync.pollFromCloud();
+      if (window.CloudSync) await window.CloudSync.pollFromCloud();
       renderStep();
     });
 
@@ -352,8 +352,16 @@
             <input type="text" id="custName" class="form-control" required placeholder="Digite seu nome completo">
           </div>
           <div class="form-group">
-            <label class="form-label">Seu WhatsApp *</label>
+            <label class="form-label">Seu Telefone / WhatsApp *</label>
             <input type="tel" id="custPhone" class="form-control" required placeholder="(11) 99999-9999">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Nome da Sua Empresa (Opcional)</label>
+            <input type="text" id="custCompany" class="form-control" placeholder="Ex: Mercado Silva Ltda">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Sua Cidade / Estado (Opcional)</label>
+            <input type="text" id="custCity" class="form-control" placeholder="Ex: São Paulo - SP">
           </div>
 
           <button type="submit" class="btn btn-orange w-full" style="margin-top:0.5rem">
@@ -379,6 +387,8 @@
 
         const name = document.getElementById('custName').value;
         const phone = document.getElementById('custPhone').value;
+        const company = document.getElementById('custCompany')?.value || '';
+        const city = document.getElementById('custCity')?.value || '';
 
         let clients = window.Store.getClients();
         let client = clients.find(c => c.phone.replace(/\D/g, '') === phone.replace(/\D/g, ''));
@@ -387,13 +397,17 @@
             id: window.Store.generateId('cli'),
             name,
             phone,
-            company: '',
-            city: '',
+            company,
+            city,
             anamnesis: 'Cliente agendou via Portal Público Online.'
           };
           clients.push(client);
-          window.Store.saveClients(clients);
+        } else {
+          client.name = name;
+          if (company) client.company = company;
+          if (city) client.city = city;
         }
+        window.Store.saveClients(clients);
 
         const newAppt = {
           id: window.Store.generateId('app'),

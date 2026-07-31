@@ -1,0 +1,24 @@
+{
+  "name": "SimplesAgendaCloud",
+  "data": {
+    "appointments": [
+      {
+        "id": "app-test-100",
+        "clientId": "cli-test-100",
+        "serviceId": "srv-1",
+        "date": "2026-08-01",
+        "time": "14:00",
+        "price": 50.00,
+        "status": "scheduled",
+        "notes": "Teste de Agendamento em Tempo Real via Nuvem"
+      }
+    ],
+    "clients": [
+      {
+        "id": "cli-test-100",
+        "name": "Carlos Teste Nuvem",
+        "phone": "(11) 99999-8888"
+      }
+    ]
+  }
+}

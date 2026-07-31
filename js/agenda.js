@@ -127,7 +127,7 @@ class AgendaController {
      1. VISÃO DIÁRIA (DAY VIEW COM BOTAO DE EDITAR E DAR BAIXA)
      ------------------------------------------------------------------------ */
   renderDayView() {
-    const dateStr = this.currentDate.toISOString().split('T')[0];
+    const dateStr = window.getLocalDateStr(this.currentDate);
     const appointments = window.Store.getAppointments().filter(a => a.date === dateStr && a.status !== 'cancelled');
     const clients = window.Store.getClients();
     const services = window.Store.getServices();
@@ -234,8 +234,8 @@ class AgendaController {
     `;
 
     days.forEach((dayObj, idx) => {
-      const dateStr = dayObj.toISOString().split('T')[0];
-      const isToday = dateStr === new Date().toISOString().split('T')[0];
+      const dateStr = window.getLocalDateStr(dayObj);
+      const isToday = dateStr === window.getLocalDateStr();
       const dayAppts = allAppts.filter(a => a.date === dateStr);
 
       html += `
@@ -303,7 +303,7 @@ class AgendaController {
       const monthStr = (month + 1).toString().padStart(2, '0');
       const dayStr = day.toString().padStart(2, '0');
       const dateStr = `${year}-${monthStr}-${dayStr}`;
-      const isToday = dateStr === new Date().toISOString().split('T')[0];
+      const isToday = dateStr === window.getLocalDateStr();
 
       const dayAppts = allAppts.filter(a => a.date === dateStr);
 
@@ -353,7 +353,7 @@ class AgendaController {
      4. VISÃO LISTA (LIST VIEW COM BOTAO DE EDITAR)
      ------------------------------------------------------------------------ */
   renderListView() {
-    const dateStr = this.currentDate.toISOString().split('T')[0];
+    const dateStr = window.getLocalDateStr(this.currentDate);
     const appointments = window.Store.getAppointments().filter(a => a.date >= dateStr && a.status !== 'cancelled');
     appointments.sort((a, b) => (a.date + a.time).localeCompare(b.date + b.time));
 
@@ -462,7 +462,7 @@ class AgendaController {
   }
 
   updateMetrics() {
-    const dateStr = this.currentDate.toISOString().split('T')[0];
+    const dateStr = window.getLocalDateStr(this.currentDate);
     const apptsToday = window.Store.getAppointments().filter(a => a.date === dateStr && a.status !== 'cancelled');
 
     const todayCountElem = document.getElementById('metricTodayCount');

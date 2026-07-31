@@ -395,7 +395,7 @@ class AppController {
 
     const clients = window.Store.getClients();
     const services = window.Store.getServices();
-    const client = clients.find(c => c.id === latestAppt.clientId) || { name: 'Cliente não identificado', phone: '' };
+    const client = clients.find(c => c.id === latestAppt.clientId) || { name: 'Cliente não identificado', phone: '', company: '', city: '' };
     const service = services.find(s => s.id === latestAppt.serviceId) || { name: 'Serviço', price: latestAppt.price || 0 };
 
     const formattedDate = latestAppt.date ? latestAppt.date.split('-').reverse().join('/') : '';
@@ -412,6 +412,8 @@ class AppController {
 
       <div style="background:var(--bg-surface-secondary); padding:1rem; border-radius:var(--radius-md); border:1px solid var(--border-color); font-size:0.9rem; display:flex; flex-direction:column; gap:0.5rem">
         <div><strong>👤 Cliente:</strong> ${client.name} ${client.phone ? `(${client.phone})` : ''}</div>
+        ${client.company ? `<div><strong>🏢 Empresa:</strong> ${client.company}</div>` : ''}
+        ${client.city ? `<div><strong>📍 Cidade / Estado:</strong> ${client.city}</div>` : ''}
         <div><strong>💇 Serviço:</strong> ${service.name}</div>
         <div><strong>📅 Data e Hora:</strong> <span style="color:var(--primary); font-weight:800">${formattedDate} às ${latestAppt.time}</span></div>
         <div><strong>💰 Valor:</strong> R$ ${formattedPrice}</div>
@@ -941,6 +943,8 @@ class AppController {
     }
 
     window.Store.saveClients(clients);
+    if (window.CloudSync) window.CloudSync.pushToCloud();
+
     window.showToast('Cliente salvo com sucesso!', 'success');
     document.getElementById('modalClient')?.classList.remove('active');
 
@@ -984,7 +988,9 @@ class AppController {
     }
 
     window.Store.saveServices(services);
-    window.showToast('Serviço salvo com sucesso!', 'success');
+    if (window.CloudSync) window.CloudSync.pushToCloud();
+
+    window.showToast('Serviço salvo com sucesso e publicado na Nuvem!', 'success');
     document.getElementById('modalService')?.classList.remove('active');
 
     if (window.Services) window.Services.render();

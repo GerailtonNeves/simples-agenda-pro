@@ -1,10 +1,10 @@
 /* ==========================================================================
-   SIMPLES AGENDA PRO - REALTIME CLOUD SYNC ENGINE
+   SIMPLES AGENDA PRO - REALTIME CLOUD SYNC ENGINE (COM SERVIÇOS & CLIENTES)
    ========================================================================== */
 
 class CloudSyncEngine {
   constructor() {
-    // ID da nuvem global compartilhado para sincronização em tempo real
+    // ID da nuvem compartilhada para sincronização completa de agendamentos, clientes e serviços
     this.defaultCloudId = '019fb9e9-5858-7525-979a-745b0d36df6f';
     this.endpoint = 'https://jsonblob.com/api/jsonBlob/';
     this.pollingInterval = null;
@@ -33,7 +33,7 @@ class CloudSyncEngine {
     }, seconds * 1000);
   }
 
-  // Busca agendamentos e clientes recentes da nuvem em tempo real
+  // Busca agendamentos, clientes e serviços recentes da nuvem em tempo real
   async pollFromCloud() {
     if (this.isSyncing) return;
     this.isSyncing = true;
@@ -55,21 +55,52 @@ class CloudSyncEngine {
         return;
       }
 
-      // Suporta estrutura com ou sem wrapper .data
       const data = jsonResult.data ? jsonResult.data : jsonResult;
       let changesMade = false;
       let newApptsReceived = [];
 
-      // 1. Sincronizar Clientes vindos da Nuvem
+      // 1. Sincronizar Serviços vindos da Nuvem (para que o agendar.html veja os serviços reais criados pelo dono)
+      if (data.services && Array.isArray(data.services) && data.services.length > 0) {
+        let localServices = window.Store.getServices() || [];
+        let servicesUpdated = false;
+
+        data.services.forEach(remoteSrv => {
+          const idx = localServices.findIndex(s => s.id === remoteSrv.id);
+          if (idx === -1) {
+            localServices.push(remoteSrv);
+            servicesUpdated = true;
+          } else if (JSON.stringify(localServices[idx]) !== JSON.stringify(remoteSrv)) {
+            localServices[idx] = remoteSrv;
+            servicesUpdated = true;
+          }
+        });
+
+        if (servicesUpdated) {
+          window.Store.saveServices(localServices);
+          if (window.Services) window.Services.render();
+        }
+      }
+
+      // 2. Sincronizar Clientes vindos da Nuvem (incluindo Empresa e Cidade)
       if (data.clients && Array.isArray(data.clients)) {
         let localClients = window.Store.getClients() || [];
         let clientsUpdated = false;
 
         data.clients.forEach(remoteCli => {
-          const exists = localClients.some(c => c.id === remoteCli.id || (c.phone && remoteCli.phone && c.phone.replace(/\D/g, '') === remoteCli.phone.replace(/\D/g, '')));
-          if (!exists) {
+          const idx = localClients.findIndex(c => c.id === remoteCli.id || (c.phone && remoteCli.phone && c.phone.replace(/\D/g, '') === remoteCli.phone.replace(/\D/g, '')));
+          if (idx === -1) {
             localClients.push(remoteCli);
             clientsUpdated = true;
+          } else {
+            // Atualizar empresa ou cidade se trazidos da nuvem
+            if (remoteCli.company && !localClients[idx].company) {
+              localClients[idx].company = remoteCli.company;
+              clientsUpdated = true;
+            }
+            if (remoteCli.city && !localClients[idx].city) {
+              localClients[idx].city = remoteCli.city;
+              clientsUpdated = true;
+            }
           }
         });
 
@@ -80,7 +111,7 @@ class CloudSyncEngine {
         }
       }
 
-      // 2. Sincronizar Agendamentos vindos da Nuvem
+      // 3. Sincronizar Agendamentos vindos da Nuvem
       if (data.appointments && Array.isArray(data.appointments)) {
         let localAppts = window.Store.getAppointments() || [];
 
@@ -124,15 +155,17 @@ class CloudSyncEngine {
     }
   }
 
-  // Envia agendamentos e clientes locais para a Nuvem
+  // Envia agendamentos, clientes e serviços locais para a Nuvem
   async pushToCloud(customData = null) {
     try {
       const localAppts = window.Store.getAppointments() || [];
       const localClients = window.Store.getClients() || [];
+      const localServices = window.Store.getServices() || [];
 
       const payload = customData || {
         appointments: localAppts,
         clients: localClients,
+        services: localServices,
         lastUpdated: new Date().toISOString()
       };
 
@@ -154,6 +187,7 @@ class CloudSyncEngine {
     try {
       let cloudAppts = [];
       let cloudClients = [];
+      let cloudServices = window.Store.getServices() || [];
 
       try {
         const res = await fetch(this.getApiUrl());
@@ -162,13 +196,21 @@ class CloudSyncEngine {
           const data = jsonResult ? (jsonResult.data ? jsonResult.data : jsonResult) : {};
           cloudAppts = data.appointments || [];
           cloudClients = data.clients || [];
+          if (data.services && data.services.length > 0) {
+            cloudServices = data.services;
+          }
         }
       } catch (e) {}
 
-      if (newClient && !cloudClients.some(c => c.id === newClient.id)) {
+      // Atualizar ou adicionar cliente
+      const existingCliIdx = cloudClients.findIndex(c => c.id === newClient.id || (c.phone && newClient.phone && c.phone.replace(/\D/g, '') === newClient.phone.replace(/\D/g, '')));
+      if (existingCliIdx === -1) {
         cloudClients.push(newClient);
+      } else {
+        cloudClients[existingCliIdx] = { ...cloudClients[existingCliIdx], ...newClient };
       }
 
+      // Adicionar novo agendamento
       if (!cloudAppts.some(a => a.id === newAppt.id)) {
         cloudAppts.push(newAppt);
       }
@@ -182,6 +224,7 @@ class CloudSyncEngine {
         body: JSON.stringify({
           appointments: cloudAppts,
           clients: cloudClients,
+          services: cloudServices,
           lastUpdated: new Date().toISOString()
         })
       });
