@@ -17,6 +17,9 @@ class SoundEngine {
     };
     document.addEventListener('click', unlock, { once: false });
     document.addEventListener('touchstart', unlock, { once: false });
+    document.addEventListener('mousemove', unlock, { once: false });
+    document.addEventListener('scroll', unlock, { once: false });
+    document.addEventListener('keydown', unlock, { once: false });
   }
 
   getAudioContext() {

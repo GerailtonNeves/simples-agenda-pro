@@ -464,7 +464,7 @@
 
       const availableTimes = generateDynamicTimeSlots();
       
-      // Filtra agendamentos ativos na data selecionada (desconsiderando agendamentos deletados/cancelados)
+      // Filtra agendamentos ativos na data selecionada
       const apptsOnDate = window.Store.getAppointments().filter(a => a.date === selectedDate && a.status !== 'cancelled');
       const occupiedTimes = new Set(apptsOnDate.map(a => a.time));
 
@@ -644,9 +644,26 @@
         currentAppts.push(newAppt);
         window.Store.saveAppointments(currentAppts);
 
-        // SINCRONIZAR COM A NUVEM EM TEMPO REAL PARA QUALQUER CELULAR OU PC NO MUNDO
-        if (window.CloudSync) {
-          await window.CloudSync.sendPublicBooking(newAppt, client);
+        // ENVIAR PARA A NUVEM IMEDIATAMENTE (COM FALLBACK DIRETO DE REDE)
+        try {
+          if (window.CloudSync) {
+            await window.CloudSync.sendPublicBooking(newAppt, client);
+          } else {
+            const cloudUrl = 'https://jsonblob.com/api/jsonBlob/019fb9e9-5858-7525-979a-745b0d36df6f';
+            const res = await fetch(cloudUrl);
+            let cloudData = res.ok ? await res.json() : {};
+            let appts = cloudData.appointments || [];
+            let clis = cloudData.clients || [];
+            appts.push(newAppt);
+            if (!clis.some(c => c.id === client.id)) clis.push(client);
+            await fetch(cloudUrl, {
+              method: 'PUT',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ ...cloudData, appointments: appts, clients: clis, lastUpdated: new Date().toISOString() })
+            });
+          }
+        } catch (cloudErr) {
+          console.warn('Erro envio nuvem:', cloudErr);
         }
 
         // DISPARAR SOM DE AVISO BIP!
