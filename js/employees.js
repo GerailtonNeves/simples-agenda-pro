@@ -204,6 +204,7 @@ class EmployeesView {
 
   deleteEmployee(id) {
     if (confirm('Deseja realmente remover este funcionário do cadastro?')) {
+      window.Store.markAsDeleted(id);
       let employees = window.Store.getEmployees() || [];
       employees = employees.filter(e => e.id !== id);
       window.Store.saveEmployees(employees);

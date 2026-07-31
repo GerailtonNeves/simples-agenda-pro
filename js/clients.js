@@ -106,6 +106,7 @@ class ClientsController {
 
   deleteClient(id) {
     if (confirm('Deseja realmente excluir este cliente do sistema?')) {
+      window.Store.markAsDeleted(id);
       let clients = window.Store.getClients();
       clients = clients.filter(c => c.id !== id);
       window.Store.saveClients(clients);

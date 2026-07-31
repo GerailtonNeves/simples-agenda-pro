@@ -453,6 +453,7 @@ class AgendaController {
 
   deleteAppointment(id) {
     if (confirm('Deseja realmente excluir permanentemente este agendamento do sistema?')) {
+      window.Store.markAsDeleted(id);
       let appts = window.Store.getAppointments();
       appts = appts.filter(a => a.id !== id);
       window.Store.saveAppointments(appts);

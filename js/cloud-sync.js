@@ -1,5 +1,5 @@
 /* ==========================================================================
-   SIMPLES AGENDA PRO - REALTIME CLOUD SYNC ENGINE (100% SUPORTE A EXCLUSÃO & HORÁRIOS)
+   SIMPLES AGENDA PRO - REALTIME CLOUD SYNC ENGINE (COM BLOQUEIO ABSOLUTO DE DELETADOS)
    ========================================================================== */
 
 class CloudSyncEngine {
@@ -56,7 +56,10 @@ class CloudSyncEngine {
       let changesMade = false;
       let newApptsReceived = [];
 
-      // 0. Sincronizar Configurações vindas da Nuvem (Nome do Negócio, Horários de Abertura/Fechamento)
+      // LISTA NEGRA: Descartar imediatamente qualquer item deletado previamente!
+      const deletedIds = new Set(window.Store ? window.Store.getDeletedIds() : []);
+
+      // 0. Sincronizar Configurações vindas da Nuvem
       if (data.settings && typeof data.settings === 'object') {
         const localSettings = window.Store.getSettings() || {};
         if (data.settings.workStartTime || data.settings.businessName) {
@@ -67,8 +70,9 @@ class CloudSyncEngine {
         }
       }
 
-      // 1. Sincronizar Serviços vindos da Nuvem (REMOÇÃO DEFINITIVA DE SERVIÇOS EXCLUÍDOS)
+      // 1. Sincronizar Serviços vindos da Nuvem (Filtrado contra Lista Negra)
       if (data.services && Array.isArray(data.services)) {
+        data.services = data.services.filter(s => !deletedIds.has(s.id));
         let localServices = window.Store.getServices() || [];
         const cloudServiceIds = new Set(data.services.map(s => s.id));
         let servicesUpdated = false;
@@ -96,8 +100,9 @@ class CloudSyncEngine {
         }
       }
 
-      // 2. Sincronizar Clientes vindos da Nuvem (REMOÇÃO DEFINITIVA DE CLIENTES EXCLUÍDOS)
+      // 2. Sincronizar Clientes vindos da Nuvem (Filtrado contra Lista Negra)
       if (data.clients && Array.isArray(data.clients)) {
+        data.clients = data.clients.filter(c => !deletedIds.has(c.id));
         let localClients = window.Store.getClients() || [];
         const cloudClientIds = new Set(data.clients.map(c => c.id));
         let clientsUpdated = false;
@@ -131,8 +136,9 @@ class CloudSyncEngine {
         }
       }
 
-      // 3. Sincronizar Agendamentos vindos da Nuvem (REMOÇÃO DEFINITIVA DE AGENDAMENTOS EXCLUÍDOS)
+      // 3. Sincronizar Agendamentos vindos da Nuvem (Filtrado contra Lista Negra)
       if (data.appointments && Array.isArray(data.appointments)) {
+        data.appointments = data.appointments.filter(a => !deletedIds.has(a.id));
         let localAppts = window.Store.getAppointments() || [];
         const cloudApptIds = new Set(data.appointments.map(a => a.id));
 
@@ -181,9 +187,10 @@ class CloudSyncEngine {
 
   async pushToCloud(customData = null) {
     try {
-      const localAppts = window.Store.getAppointments() || [];
-      const localClients = window.Store.getClients() || [];
-      const localServices = window.Store.getServices() || [];
+      const deletedIds = new Set(window.Store ? window.Store.getDeletedIds() : []);
+      const localAppts = (window.Store.getAppointments() || []).filter(a => !deletedIds.has(a.id));
+      const localClients = (window.Store.getClients() || []).filter(c => !deletedIds.has(c.id));
+      const localServices = (window.Store.getServices() || []).filter(s => !deletedIds.has(s.id));
       const localSettings = window.Store.getSettings() || {};
 
       const payload = customData || {
@@ -213,16 +220,17 @@ class CloudSyncEngine {
       let cloudClients = [];
       let cloudServices = window.Store.getServices() || [];
       let cloudSettings = window.Store.getSettings() || {};
+      const deletedIds = new Set(window.Store ? window.Store.getDeletedIds() : []);
 
       try {
         const res = await fetch(this.getApiUrl());
         if (res.ok) {
           const jsonResult = await res.json();
           const data = jsonResult ? (jsonResult.data ? jsonResult.data : jsonResult) : {};
-          cloudAppts = data.appointments || [];
-          cloudClients = data.clients || [];
+          cloudAppts = (data.appointments || []).filter(a => !deletedIds.has(a.id));
+          cloudClients = (data.clients || []).filter(c => !deletedIds.has(c.id));
           if (data.services && data.services.length > 0) {
-            cloudServices = data.services;
+            cloudServices = data.services.filter(s => !deletedIds.has(s.id));
           }
           if (data.settings) {
             cloudSettings = data.settings;

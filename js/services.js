@@ -113,6 +113,7 @@ class ServicesView {
       card.querySelector('.btn-edit-srv').onclick = () => window.App.openServiceModal(srv);
       card.querySelector('.btn-delete-srv').onclick = () => {
         if (confirm(`Remover permanentemente o serviço "${srv.name}"?`)) {
+          window.Store.markAsDeleted(srv.id);
           let list = window.Store.getServices();
           list = list.filter(s => s.id !== srv.id);
           window.Store.saveServices(list);
@@ -300,6 +301,7 @@ class ServicesView {
 
       card.querySelector('.btn-delete-prod').onclick = () => {
         if (confirm(`Remover permanentemente o produto "${prod.name}" do estoque?`)) {
+          window.Store.markAsDeleted(prod.id);
           let list = window.Store.getProducts();
           list = list.filter(p => p.id !== prod.id);
           window.Store.saveProducts(list);
