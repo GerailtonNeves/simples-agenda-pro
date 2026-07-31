@@ -1,0 +1,10 @@
+{
+  "appointments": [],
+  "clients": [],
+  "services": [
+    { "id": "srv-1", "name": "Corte de Cabelo Masculino / Feminino", "duration": 40, "price": 60, "color": "#0EA5E9" },
+    { "id": "srv-2", "name": "Barba Completa com Toalha Quente", "duration": 30, "price": 40, "color": "#F97316" },
+    { "id": "srv-3", "name": "Combo Corte + Barba VIP", "duration": 60, "price": 90, "color": "#8B5CF6" }
+  ],
+  "lastUpdated": "2026-07-31T21:11:00.000Z"
+}

@@ -1,5 +1,5 @@
 /* ==========================================================================
-   SIMPLES AGENDA PRO - REALTIME CLOUD SYNC ENGINE (COM SERVIÇOS & CLIENTES)
+   SIMPLES AGENDA PRO - REALTIME CLOUD SYNC ENGINE (COM SUPORTE A EXCLUSÃO DEFINITIVA)
    ========================================================================== */
 
 class CloudSyncEngine {
@@ -59,7 +59,7 @@ class CloudSyncEngine {
       let changesMade = false;
       let newApptsReceived = [];
 
-      // 1. Sincronizar Serviços vindos da Nuvem (para que o agendar.html veja os serviços reais criados pelo dono)
+      // 1. Sincronizar Serviços vindos da Nuvem
       if (data.services && Array.isArray(data.services) && data.services.length > 0) {
         let localServices = window.Store.getServices() || [];
         let servicesUpdated = false;
@@ -81,7 +81,7 @@ class CloudSyncEngine {
         }
       }
 
-      // 2. Sincronizar Clientes vindos da Nuvem (incluindo Empresa e Cidade)
+      // 2. Sincronizar Clientes vindos da Nuvem
       if (data.clients && Array.isArray(data.clients)) {
         let localClients = window.Store.getClients() || [];
         let clientsUpdated = false;
@@ -92,7 +92,6 @@ class CloudSyncEngine {
             localClients.push(remoteCli);
             clientsUpdated = true;
           } else {
-            // Atualizar empresa ou cidade se trazidos da nuvem
             if (remoteCli.company && !localClients[idx].company) {
               localClients[idx].company = remoteCli.company;
               clientsUpdated = true;
@@ -111,20 +110,28 @@ class CloudSyncEngine {
         }
       }
 
-      // 3. Sincronizar Agendamentos vindos da Nuvem
+      // 3. Sincronizar Agendamentos vindos da Nuvem (COM SUPORTE A REMOÇÃO DE EXCLUÍDOS)
       if (data.appointments && Array.isArray(data.appointments)) {
         let localAppts = window.Store.getAppointments() || [];
+        const cloudApptIds = new Set(data.appointments.map(a => a.id));
 
+        // 3a. Se um agendamento foi excluído na nuvem, remover localmente para não voltar
+        const initialCount = localAppts.length;
+        localAppts = localAppts.filter(a => cloudApptIds.has(a.id));
+        if (localAppts.length !== initialCount) {
+          changesMade = true;
+        }
+
+        // 3b. Adicionar ou atualizar agendamentos que estão na nuvem
         data.appointments.forEach(remoteAppt => {
           const localIdx = localAppts.findIndex(a => a.id === remoteAppt.id);
 
           if (localIdx === -1) {
-            // Novo agendamento feito pelo cliente na internet!
+            // Novo agendamento vindo da nuvem!
             localAppts.push(remoteAppt);
             newApptsReceived.push(remoteAppt);
             changesMade = true;
           } else {
-            // Se o status mudou na nuvem
             if (localAppts[localIdx].status !== remoteAppt.status) {
               localAppts[localIdx] = remoteAppt;
               changesMade = true;
@@ -138,7 +145,6 @@ class CloudSyncEngine {
           if (window.App) window.App.updateAlertCenterBadge();
         }
 
-        // Se detectou novos agendamentos vindos do celular dos clientes
         if (newApptsReceived.length > 0 && window.App) {
           newApptsReceived.forEach(newAppt => {
             if (!window.App.knownApptIds.has(newAppt.id)) {
@@ -202,7 +208,6 @@ class CloudSyncEngine {
         }
       } catch (e) {}
 
-      // Atualizar ou adicionar cliente
       const existingCliIdx = cloudClients.findIndex(c => c.id === newClient.id || (c.phone && newClient.phone && c.phone.replace(/\D/g, '') === newClient.phone.replace(/\D/g, '')));
       if (existingCliIdx === -1) {
         cloudClients.push(newClient);
@@ -210,7 +215,6 @@ class CloudSyncEngine {
         cloudClients[existingCliIdx] = { ...cloudClients[existingCliIdx], ...newClient };
       }
 
-      // Adicionar novo agendamento
       if (!cloudAppts.some(a => a.id === newAppt.id)) {
         cloudAppts.push(newAppt);
       }

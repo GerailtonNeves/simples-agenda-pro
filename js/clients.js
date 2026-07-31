@@ -109,6 +109,7 @@ class ClientsController {
       let clients = window.Store.getClients();
       clients = clients.filter(c => c.id !== id);
       window.Store.saveClients(clients);
+      if (window.CloudSync) window.CloudSync.pushToCloud();
 
       window.showToast('Cliente excluído com sucesso!', 'success');
       this.render();

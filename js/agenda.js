@@ -425,6 +425,7 @@ class AgendaController {
       const appt = appts[idx];
       appt.status = 'completed';
       window.Store.saveAppointments(appts);
+      if (window.CloudSync) window.CloudSync.pushToCloud();
 
       const services = window.Store.getServices();
       const clients = window.Store.getClients();
@@ -455,6 +456,7 @@ class AgendaController {
       let appts = window.Store.getAppointments();
       appts = appts.filter(a => a.id !== id);
       window.Store.saveAppointments(appts);
+      if (window.CloudSync) window.CloudSync.pushToCloud();
 
       window.showToast('Agendamento excluído com sucesso!', 'success');
       this.render();
