@@ -1,12 +1,12 @@
 /* ==========================================================================
-   SIMPLES AGENDA PRO - REALTIME CLOUD SYNC ENGINE (NUVEM EM TEMPO REAL)
+   SIMPLES AGENDA PRO - PERMANENT REALTIME CLOUD SYNC ENGINE (API.RESTFUL-API.DEV)
    ========================================================================== */
 
 class CloudSyncEngine {
   constructor() {
-    // ID da nuvem global compartilhado para sincronização entre qualquer celular/computador na internet
-    this.defaultCloudId = '1399897152062578688';
-    this.endpoint = 'https://jsonblob.com/api/jsonBlob/';
+    // ID da nuvem permanente compartilhado para sincronização entre qualquer celular ou computador no mundo
+    this.defaultCloudId = 'ff8081819f7e10ae019fb9d8ebc55950';
+    this.endpoint = 'https://api.restful-api.dev/objects/';
     this.pollingInterval = null;
     this.isSyncing = false;
   }
@@ -49,12 +49,13 @@ class CloudSyncEngine {
         return;
       }
 
-      const data = await response.json();
-      if (!data) {
+      const jsonResult = await response.json();
+      if (!jsonResult || !jsonResult.data) {
         this.isSyncing = false;
         return;
       }
 
+      const data = jsonResult.data;
       let changesMade = false;
 
       // 1. Sincronizar Clientes vindos da Nuvem
@@ -126,7 +127,7 @@ class CloudSyncEngine {
       const localAppts = window.Store.getAppointments() || [];
       const localClients = window.Store.getClients() || [];
 
-      const payload = customData || {
+      const payloadData = customData || {
         appointments: localAppts,
         clients: localClients,
         lastUpdated: new Date().toISOString()
@@ -138,7 +139,10 @@ class CloudSyncEngine {
           'Content-Type': 'application/json',
           'Accept': 'application/json'
         },
-        body: JSON.stringify(payload)
+        body: JSON.stringify({
+          name: "SimplesAgendaCloud",
+          data: payloadData
+        })
       });
     } catch (err) {
       console.warn('Erro ao enviar dados para a Nuvem:', err);
@@ -148,16 +152,17 @@ class CloudSyncEngine {
   // Envia 1 novo agendamento feito pelo cliente no link público
   async sendPublicBooking(newAppt, newClient) {
     try {
-      // Tentar buscar estado atual da nuvem primeiro
       let cloudAppts = [];
       let cloudClients = [];
 
       try {
         const res = await fetch(this.getApiUrl());
         if (res.ok) {
-          const data = await res.json();
-          cloudAppts = data.appointments || [];
-          cloudClients = data.clients || [];
+          const jsonResult = await res.json();
+          if (jsonResult && jsonResult.data) {
+            cloudAppts = jsonResult.data.appointments || [];
+            cloudClients = jsonResult.data.clients || [];
+          }
         }
       } catch (e) {}
 
@@ -179,9 +184,12 @@ class CloudSyncEngine {
           'Accept': 'application/json'
         },
         body: JSON.stringify({
-          appointments: cloudAppts,
-          clients: cloudClients,
-          lastUpdated: new Date().toISOString()
+          name: "SimplesAgendaCloud",
+          data: {
+            appointments: cloudAppts,
+            clients: cloudClients,
+            lastUpdated: new Date().toISOString()
+          }
         })
       });
     } catch (err) {
