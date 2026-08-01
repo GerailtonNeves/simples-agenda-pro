@@ -6,6 +6,8 @@ class LicenseEngine {
   constructor() {
     this.storageKey = 'simples_agenda_license';
     this.deviceIdKey = 'simples_agenda_device_id';
+    this.contactPhone = '(11) 98589-7774';
+    this.contactPhoneRaw = '5511985897774';
   }
 
   init() {
@@ -13,7 +15,7 @@ class LicenseEngine {
     this.ensureDefaultLicense();
     this.checkLicenseLock();
 
-    // Verificação contínua a cada 10 segundos para testar expiração em tempo real (ex: licenças de 5 minutos ou 24h)
+    // Verificação contínua em tempo real a cada 10 segundos
     setInterval(() => {
       this.checkLicenseLock();
     }, 10000);
@@ -40,22 +42,22 @@ class LicenseEngine {
     return localStorage.getItem(this.deviceIdKey) || this.ensureDeviceId();
   }
 
-  // 2. OBTER OU INICIALIZAR LICENÇA
+  // 2. OBTER OU INICIALIZAR LICENÇA (NOVA INSTALAÇÃO VEM COM 24 HORAS GRÁTIS PARA TESTAR)
   getLicense() {
     try {
       const data = localStorage.getItem(this.storageKey);
       if (data) return JSON.parse(data);
     } catch(e) {}
 
-    // Licença Padrão (Mensal Ativa Vinculada ao Dispositivo Atual)
+    // Licença Inicial de Fábrica para novos clientes: TESTE GRÁTIS DE 24 HORAS!
     const devId = this.getDeviceId();
     const defaultLic = {
-      plan: 'MENSAL (30 Dias)',
+      plan: 'TESTE GRÁTIS (24 Horas)',
       status: 'ATIVO',
-      expirationDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
+      expirationDate: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
       boundDeviceId: devId,
-      boundDeviceName: 'Dispositivo Principal',
-      activationCode: null,
+      boundDeviceName: 'Dispositivo de Teste',
+      activationCode: 'TRIAL-24H',
       generatedCodes: []
     };
     localStorage.setItem(this.storageKey, JSON.stringify(defaultLic));
@@ -76,25 +78,29 @@ class LicenseEngine {
     const lic = this.getLicense();
     const currentDevId = this.getDeviceId();
 
-    // Se a licença já estiver em status expirado, manter bloqueado
+    // Se o plano for Vitalício, nunca expira e permite acesso total
+    if (lic.plan && (lic.plan.includes('VITALÍCIO') || lic.plan.includes('VITA'))) {
+      return true;
+    }
+
+    // Se a licença já estiver em status expirado, exibir o modal com o telefone de contato (11) 98589-7774
     if (lic.status === 'EXPIRADO') {
       this.showExpiredModal(lic);
       return false;
     }
 
-    // Se o plano for MENSAL ou TESTE (5m / 24h) e estiver vinculado a outro dispositivo
+    // Trava de 1 dispositivo para planos Mensal / Teste 24h
     if (lic.plan && (lic.plan.includes('MENSAL') || lic.plan.includes('TESTE') || lic.plan.includes('30') || lic.plan.includes('5 Minutos'))) {
       if (!lic.boundDeviceId) {
         lic.boundDeviceId = currentDevId;
         this.saveLicense(lic);
       } else if (lic.boundDeviceId !== currentDevId) {
-        // DISPOSITIVO NÃO AUTORIZADO! BLOQUEAR ACESSO!
         this.showDeviceBlockedModal(lic);
         return false;
       }
     }
 
-    // Verificar se a data/hora de expiração já passou
+    // Verificar se a data/hora de expiração passou
     if (lic.expirationDate && new Date(lic.expirationDate) < new Date()) {
       lic.status = 'EXPIRADO';
       this.saveLicense(lic);
@@ -105,7 +111,7 @@ class LicenseEngine {
     return true;
   }
 
-  // 4. GERADOR MULTIPLANOS DE CÓDIGOS DE ATIVAÇÃO (5 MINUTOS, 24H, 30 DIAS, 6 MESES, ANUAL)
+  // 4. GERADOR MULTIPLANOS DE CÓDIGOS DE ATIVAÇÃO (5M, 24H, 30D, 6M, 1Y, VITALÍCIO)
   generateCodeByPlan(planType) {
     const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
     const randSeg = (len) => {
@@ -132,6 +138,9 @@ class LicenseEngine {
     } else if (planType === '1y') {
       prefix = 'GN-ANO';
       label = 'Anual VIP (1 Ano)';
+    } else if (planType === 'vita') {
+      prefix = 'GN-VITA';
+      label = 'Plano Vitalício (Acesso Para Sempre)';
     }
 
     const code = `${prefix}-${randSeg(4)}-${randSeg(4)}`;
@@ -164,7 +173,11 @@ class LicenseEngine {
     let planLabel = 'ANUAL VIP (1 Ano)';
     let isMultiDevice = true;
 
-    if (cleanCode.includes('5MIN') || cleanCode.includes('5M') || (codeObj && codeObj.planType === '5m')) {
+    if (cleanCode.includes('VITA') || (codeObj && codeObj.planType === 'vita')) {
+      daysToAdd = 36500; // 100 anos (Vitalício)
+      planLabel = 'VITALÍCIO (Acesso Para Sempre)';
+      isMultiDevice = true;
+    } else if (cleanCode.includes('5MIN') || cleanCode.includes('5M') || (codeObj && codeObj.planType === '5m')) {
       minutesToAdd = 5;
       planLabel = 'TESTE RÁPIDO (5 Minutos)';
       isMultiDevice = false;
@@ -211,7 +224,7 @@ class LicenseEngine {
       }
 
       this.saveLicense(lic);
-      const timeFormatted = minutesToAdd > 0 ? expDate.toLocaleTimeString('pt-BR') : expDate.toLocaleDateString('pt-BR');
+      const timeFormatted = planLabel.includes('VITALÍCIO') ? 'ILIMITADO (SEM EXPIRAÇÃO)' : (minutesToAdd > 0 ? expDate.toLocaleTimeString('pt-BR') : expDate.toLocaleDateString('pt-BR'));
       return { success: true, message: `🎉 Licença ${planLabel} Ativada com Sucesso! Acesso liberado no sistema até ${timeFormatted}.` };
     }
 
@@ -227,7 +240,7 @@ class LicenseEngine {
     return true;
   }
 
-  // 7. EXIBIR MODAL SELETO DE GERAÇÃO DE LICENÇA (5M, 24H, 30D, 6M, 1Y)
+  // 7. EXIBIR MODAL SELETOR DE GERAÇÃO DE LICENÇA (24H, 30D, 6M, 1Y, VITALÍCIO)
   openGenerateCodeModal() {
     let modal = document.getElementById('modalGenerateCode');
     if (!modal) {
@@ -240,7 +253,7 @@ class LicenseEngine {
           <div class="modal-header" style="background:var(--primary-gradient); color:#FFF">
             <div style="display:flex; align-items:center; gap:0.5rem">
               <i data-lucide="sparkles" style="width:22px; height:22px; color:#FFF"></i>
-              <h3 style="color:#FFF; font-weight:900">Gerar Código de Licença / Teste</h3>
+              <h3 style="color:#FFF; font-weight:900">Gerar Código de Licença</h3>
             </div>
             <button class="icon-btn close-modal" style="color:#FFF; border-color:transparent; background:rgba(255,255,255,0.2)"><i data-lucide="x"></i></button>
           </div>
@@ -248,11 +261,12 @@ class LicenseEngine {
             <div class="form-group">
               <label class="form-label" style="font-weight:800">Escolha a Duração do Plano *</label>
               <select id="selectPlanDuration" class="form-control" style="font-size:1rem; font-weight:700">
+                <option value="24h" selected>⏱️ Teste Grátis (24 Horas de Acesso)</option>
                 <option value="5m">⚡ Teste Rápido de Vencimento (5 Minutos)</option>
-                <option value="24h">⏱️ Teste Grátis (24 Horas de Acesso)</option>
                 <option value="30d">📅 Plano Mensal (30 Dias)</option>
                 <option value="6m">🗓️ Plano Semestral (6 Meses)</option>
-                <option value="1y" selected>⭐ Plano Anual VIP (1 Ano / 365 Dias)</option>
+                <option value="1y">⭐ Plano Anual VIP (1 Ano / 365 Dias)</option>
+                <option value="vita">🏆 Plano Vitalício (Acesso Para Sempre)</option>
               </select>
             </div>
 
@@ -338,6 +352,7 @@ class LicenseEngine {
     }
   }
 
+  // 9. MODAL DE LICENÇA EXPIRADA COM O SEU TELEFONE (11) 98589-7774 DESTACADO
   showExpiredModal(lic) {
     let modal = document.getElementById('modalLicenseExpired');
     if (!modal) {
@@ -346,20 +361,36 @@ class LicenseEngine {
       modal.className = 'modal-overlay active';
       modal.style.zIndex = '99999';
       modal.innerHTML = `
-        <div class="modal-container" style="max-width:480px; border-top:6px solid #F59E0B; border-radius:24px">
-          <div class="modal-header" style="background:#FFF7ED; color:#C2410C">
+        <div class="modal-container" style="max-width:500px; border-top:6px solid #EF4444; border-radius:24px">
+          <div class="modal-header" style="background:#FEE2E2; color:#991B1B">
             <div style="display:flex; align-items:center; gap:0.6rem">
-              <i data-lucide="alert-triangle" style="width:28px; height:28px; color:#EA580C"></i>
-              <h3 style="font-weight:900; color:#C2410C; font-size:1.15rem">LICENÇA EXPIRADA</h3>
+              <i data-lucide="alert-triangle" style="width:28px; height:28px; color:#DC2626"></i>
+              <h3 style="font-weight:900; color:#991B1B; font-size:1.15rem">LICENÇA EXPIRADA</h3>
             </div>
           </div>
           <div class="modal-body" style="padding:1.5rem 1.25rem; text-align:center">
-            <h4 style="font-size:1.15rem; font-weight:900; color:#0F172A; margin-bottom:0.5rem">Sua Assinatura Expirou</h4>
-            <p class="text-muted" style="font-size:0.875rem">
-              Insira um novo código de ativação (5min, 24h, 30 dias, 6 meses ou 1 ano) para liberar seu acesso.
+            <div style="width:68px; height:68px; background:#FEE2E2; color:#DC2626; border-radius:50%; display:inline-flex; align-items:center; justify-content:center; margin-bottom:1rem">
+              <i data-lucide="clock" style="width:36px; height:36px"></i>
+            </div>
+            <h4 style="font-size:1.15rem; font-weight:900; color:#0F172A; margin-bottom:0.5rem">Seu Período de Teste ou Assinatura Expirou!</h4>
+            <p class="text-muted" style="font-size:0.875rem; line-height:1.5">
+              Para continuar utilizando o sistema e liberando seus agendamentos, entre em contato com nosso suporte para adquirir uma nova licença.
             </p>
-            <button class="btn btn-orange w-full margin-top" onclick="window.License.openRedeemModal()">
-              🔑 Inserir Código de Ativação
+
+            <div style="background:#FFF7ED; border:1px solid #FDBA74; border-radius:18px; padding:1.15rem; margin:1.25rem 0; text-align:center">
+              <div style="font-weight:900; color:#C2410C; font-size:0.85rem; text-transform:uppercase; margin-bottom:0.35rem">
+                📞 Entre em Contato para Adquirir sua Licença:
+              </div>
+              <div style="font-size:1.4rem; font-weight:900; color:#EA580C; margin-bottom:0.75rem">
+                ${this.contactPhone}
+              </div>
+              <a href="https://api.whatsapp.com/send?phone=${this.contactPhoneRaw}&text=Ol%C3%A1!%20Minha%20licen%C3%A7a%20do%20Simples%20Agenda%20Pro%20expirou.%20Gostaria%20de%20adquirir%20uma%20nova%20licen%C3%A7a!" target="_blank" class="btn btn-whatsapp w-full" style="font-size:0.85rem">
+                📲 Falar no WhatsApp: ${this.contactPhone}
+              </a>
+            </div>
+
+            <button class="btn btn-orange w-full" onclick="window.License.openRedeemModal()">
+              🔑 Já Tenho um Código! Inserir Licença
             </button>
           </div>
         </div>
@@ -389,7 +420,7 @@ class LicenseEngine {
           </div>
           <div class="modal-body" style="padding:1.5rem 1.25rem">
             <label class="form-label" style="font-weight:800">Digite seu Código de Ativação *</label>
-            <input type="text" id="inputActivationCode" class="form-control" placeholder="Ex: GN-5MIN-X9K2 / GN-ANO-M4P1" style="font-size:1.1rem; font-weight:800; text-transform:uppercase; letter-spacing:0.05em; text-align:center; padding:0.85rem">
+            <input type="text" id="inputActivationCode" class="form-control" placeholder="Ex: GN-TESTE-X9K2 / GN-VITA-M4P1" style="font-size:1.1rem; font-weight:800; text-transform:uppercase; letter-spacing:0.05em; text-align:center; padding:0.85rem">
             
             <button class="btn btn-orange w-full margin-top" id="btnSubmitActivationCode">
               🚀 Ativar Licença Agora
