@@ -16,7 +16,9 @@
   cursor: pointer !important;
   transition: all var(--transition-fast) !important;
   text-decoration: none !important;
-  white-space: nowrap !important;
+  white-space: normal !important;
+  word-break: break-word !important;
+  text-align: center !important;
   box-sizing: border-box !important;
   letter-spacing: -0.01em !important;
 }

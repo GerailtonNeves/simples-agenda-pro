@@ -1,14 +1,17 @@
 /* ==========================================================================
-   SIMPLES AGENDA PRO - ULTRA-RESPONSIVE & MULTI-DEVICE ENGINE (CELULAR, TABLET & COMPUTADOR)
+   SIMPLES AGENDA PRO - ULTRA-RESPONSIVE & TOUCH DRAG ENGINE (CELULAR, TABLET & COMPUTADOR)
    ========================================================================== */
 
 /* --------------------------------------------------------------------------
-   0. RESET E PREVENÇÃO DE TRANSBORDAMENTO (OVERFLOW)
+   0. RESET E NAVEGAÇÃO LIVRE POR GESTOS E ARRASTE (UP/DOWN/LEFT/RIGHT)
    -------------------------------------------------------------------------- */
 html, body {
   width: 100% !important;
   max-width: 100vw !important;
-  overflow-x: hidden !important;
+  min-height: 100vh !important;
+  overflow-x: auto !important;
+  overflow-y: auto !important;
+  -webkit-overflow-scrolling: touch !important;
   position: relative !important;
 }
 
@@ -17,23 +20,28 @@ html, body {
   max-width: 100vw !important;
   min-height: 100vh !important;
   position: relative !important;
-  overflow-x: hidden !important;
+  overflow-x: auto !important;
+  overflow-y: auto !important;
+  -webkit-overflow-scrolling: touch !important;
 }
 
 .main-wrapper {
   flex: 1 !important;
   width: 100% !important;
   max-width: 100% !important;
-  min-width: 0 !important; /* Impede que flexbox quebre largura em telas pequenas */
-  overflow-x: hidden !important;
+  min-width: 0 !important;
+  overflow-x: auto !important;
+  overflow-y: auto !important;
+  -webkit-overflow-scrolling: touch !important;
 }
 
 .content-body {
   width: 100% !important;
   max-width: 100% !important;
   min-width: 0 !important;
-  overflow-x: hidden !important;
+  overflow-x: auto !important;
   overflow-y: auto !important;
+  -webkit-overflow-scrolling: touch !important;
   box-sizing: border-box !important;
 }
 
@@ -42,6 +50,7 @@ html, body {
   width: 100% !important;
   max-width: 100% !important;
   overflow-x: auto !important;
+  overflow-y: auto !important;
   -webkit-overflow-scrolling: touch !important;
   border-radius: var(--radius-md) !important;
 }
@@ -182,7 +191,10 @@ html, body {
   /* Área Principal de Conteúdo no Celular */
   .content-body {
     padding: 0.75rem !important;
-    padding-bottom: 85px !important; /* Espaço para não cobrir a barra inferior */
+    padding-bottom: 85px !important;
+    overflow-y: auto !important;
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch !important;
   }
 
   .mobile-bottom-nav {
@@ -246,6 +258,8 @@ html, body {
   /* Modais Totalmente Responsivos no Celular */
   .modal-overlay {
     padding: 0.5rem !important;
+    overflow-y: auto !important;
+    -webkit-overflow-scrolling: touch !important;
   }
 
   .modal-container {
@@ -254,6 +268,8 @@ html, body {
     max-height: 92vh !important;
     border-radius: var(--radius-md) !important;
     margin: 0 !important;
+    overflow-y: auto !important;
+    -webkit-overflow-scrolling: touch !important;
   }
 
   .modal-header {
@@ -267,6 +283,8 @@ html, body {
   .modal-body {
     padding: 0.85rem 1rem !important;
     max-height: 75vh !important;
+    overflow-y: auto !important;
+    -webkit-overflow-scrolling: touch !important;
   }
 
   .modal-footer {
@@ -294,6 +312,7 @@ html, body {
     width: 100% !important;
     overflow-x: auto !important;
     justify-content: flex-start !important;
+    -webkit-overflow-scrolling: touch !important;
   }
 
   .sub-tab-btn {
@@ -323,6 +342,9 @@ html, body {
   .content-body {
     padding: 1.25rem !important;
     padding-bottom: 1.5rem !important;
+    overflow-y: auto !important;
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch !important;
   }
 
   .metrics-grid {

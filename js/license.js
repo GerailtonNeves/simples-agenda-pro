@@ -45,13 +45,13 @@ class LicenseEngine {
     // Licença Padrão (Mensal Ativa Vinculada ao Dispositivo Atual)
     const devId = this.getDeviceId();
     const defaultLic = {
-      plan: 'MENSAL', // 'MENSAL' ou 'ANUAL'
-      status: 'ATIVO', // 'ATIVO', 'BLOQUEADO', 'EXPIRADO'
+      plan: 'MENSAL (30 Dias)', // 'TESTE 24H', 'MENSAL (30 Dias)', 'SEMESTRAL (6 Meses)', 'ANUAL VIP'
+      status: 'ATIVO',
       expirationDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
       boundDeviceId: devId,
       boundDeviceName: 'Dispositivo Principal',
       activationCode: null,
-      generatedCodes: [] // Histórico de códigos anuais criados pelo admin
+      generatedCodes: []
     };
     localStorage.setItem(this.storageKey, JSON.stringify(defaultLic));
     return defaultLic;
@@ -66,18 +66,18 @@ class LicenseEngine {
     this.getLicense();
   }
 
-  // 3. LOGICA DE BLOQUEIO POR DISPOSITIVO (PLANO MENSAL X ANUAL)
+  // 3. LOGICA DE BLOQUEIO POR DISPOSITIVO (MENSAL X MULTIDISPOSITIVOS ANUAL)
   checkLicenseLock() {
     const lic = this.getLicense();
     const currentDevId = this.getDeviceId();
 
-    // Se o plano for MENSAL e estiver vinculado a outro dispositivo
-    if (lic.plan === 'MENSAL') {
+    // Se o plano for MENSAL ou TESTE 24H e estiver vinculado a outro dispositivo
+    if (lic.plan && (lic.plan.includes('MENSAL') || lic.plan.includes('TESTE') || lic.plan.includes('30'))) {
       if (!lic.boundDeviceId) {
         lic.boundDeviceId = currentDevId;
         this.saveLicense(lic);
       } else if (lic.boundDeviceId !== currentDevId) {
-        // DISPOSITIVO NÃO AUTORIZADO! BLOQUEAR ACESSO MENSAL!
+        // DISPOSITIVO NÃO AUTORIZADO! BLOQUEAR ACESSO!
         this.showDeviceBlockedModal(lic);
         return false;
       }
@@ -94,56 +94,94 @@ class LicenseEngine {
     return true;
   }
 
-  // 4. GERADOR DE CÓDIGOS DE ATIVAÇÃO PARA PLANO ANUAL (EX: GN-2026-X9K2-M4P1)
-  generateAnnualActivationCode() {
+  // 4. GERADOR MULTIPLANOS DE CÓDIGOS DE ATIVAÇÃO (24H, 30 DIAS, 6 MESES, ANUAL)
+  generateCodeByPlan(planType) {
     const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
-    const randSegment = (len) => {
+    const randSeg = (len) => {
       let res = '';
-      for (let i = 0; i < len; i++) {
-        res += chars.charAt(Math.floor(Math.random() * chars.length));
-      }
+      for (let i = 0; i < len; i++) res += chars.charAt(Math.floor(Math.random() * chars.length));
       return res;
     };
 
-    const year = new Date().getFullYear();
-    const code = `GN-${year}-${randSegment(4)}-${randSegment(4)}`;
+    let prefix = 'GN-ANO';
+    let label = 'Anual VIP (1 Ano)';
+
+    if (planType === '24h') {
+      prefix = 'GN-TESTE';
+      label = 'Teste Grátis (24 Horas)';
+    } else if (planType === '30d') {
+      prefix = 'GN-M30';
+      label = 'Mensal (30 Dias)';
+    } else if (planType === '6m') {
+      prefix = 'GN-6M';
+      label = 'Semestral (6 Meses)';
+    } else if (planType === '1y') {
+      prefix = 'GN-ANO';
+      label = 'Anual VIP (1 Ano)';
+    }
+
+    const code = `${prefix}-${randSeg(4)}-${randSeg(4)}`;
 
     const lic = this.getLicense();
     if (!lic.generatedCodes) lic.generatedCodes = [];
     lic.generatedCodes.push({
       code,
+      planType,
+      label,
       createdAt: new Date().toISOString(),
-      used: false,
-      usedAt: null
+      used: false
     });
     this.saveLicense(lic);
 
-    return code;
+    return { code, label };
   }
 
-  // 5. RESGATAR / ATIVAR CÓDIGO DE ATIVAÇÃO ANUAL
+  // 5. RESGATAR / ATIVAR CÓDIGO DE ATIVAÇÃO
   redeemActivationCode(inputCode) {
     if (!inputCode) return { success: false, message: 'Digite o código de ativação.' };
     
     const cleanCode = inputCode.trim().toUpperCase();
     const lic = this.getLicense();
 
-    // Validar se o código é válido ou no histórico
+    // Buscar no histórico local ou interpretar prefixos oficiais
     const codeObj = (lic.generatedCodes || []).find(c => c.code === cleanCode);
     
-    // Aceita códigos gerados pelo admin ou códigos com o prefixo oficial GN-
+    let daysToAdd = 365;
+    let planLabel = 'ANUAL VIP (1 Ano)';
+    let isMultiDevice = true;
+
+    if (cleanCode.includes('TESTE') || (codeObj && codeObj.planType === '24h')) {
+      daysToAdd = 1;
+      planLabel = 'TESTE GRÁTIS (24 Horas)';
+      isMultiDevice = false;
+    } else if (cleanCode.includes('M30') || (codeObj && codeObj.planType === '30d')) {
+      daysToAdd = 30;
+      planLabel = 'MENSAL (30 Dias)';
+      isMultiDevice = false;
+    } else if (cleanCode.includes('6M') || (codeObj && codeObj.planType === '6m')) {
+      daysToAdd = 180;
+      planLabel = 'SEMESTRAL (6 Meses)';
+      isMultiDevice = true;
+    } else if (cleanCode.includes('ANO') || cleanCode.includes('GN-') || (codeObj && codeObj.planType === '1y')) {
+      daysToAdd = 365;
+      planLabel = 'ANUAL VIP (1 Ano)';
+      isMultiDevice = true;
+    }
+
     if (cleanCode.startsWith('GN-') || codeObj) {
-      lic.plan = 'ANUAL';
+      lic.plan = planLabel;
       lic.status = 'ATIVO';
       lic.activationCode = cleanCode;
       
-      // Adiciona +365 dias a partir de hoje
-      const nextYear = new Date();
-      nextYear.setFullYear(nextYear.getFullYear() + 1);
-      lic.expirationDate = nextYear.toISOString();
+      const expDate = new Date();
+      expDate.setTime(expDate.getTime() + daysToAdd * 24 * 60 * 60 * 1000);
+      lic.expirationDate = expDate.toISOString();
       
-      // Plano anual libera múltiplos dispositivos (desvincula trava de 1 aparelho)
-      lic.boundDeviceId = null;
+      if (isMultiDevice) {
+        lic.boundDeviceId = null; // Acesso ilimitado em múltiplos dispositivos
+      } else {
+        lic.boundDeviceId = this.getDeviceId(); // Vinculado ao dispositivo atual
+      }
 
       if (codeObj) {
         codeObj.used = true;
@@ -151,13 +189,13 @@ class LicenseEngine {
       }
 
       this.saveLicense(lic);
-      return { success: true, message: '🎉 Plano Anual Ativado com Sucesso! 365 dias de acesso VIP liberados para todos os seus dispositivos.' };
+      return { success: true, message: `🎉 Licença ${planLabel} Ativada com Sucesso! Acesso liberado no sistema até ${expDate.toLocaleDateString('pt-BR')}.` };
     }
 
     return { success: false, message: '❌ Código de ativação inválido ou não encontrado. Verifique o código e tente novamente.' };
   }
 
-  // 6. DESVINCULAR DISPOSITIVO MENSAL (PARA TROCA DE APARELHO)
+  // 6. DESVINCULAR DISPOSITIVO MENSAL
   resetMonthlyDeviceBinding() {
     const lic = this.getLicense();
     lic.boundDeviceId = this.getDeviceId();
@@ -166,7 +204,80 @@ class LicenseEngine {
     return true;
   }
 
-  // 7. EXIBIR MODAL DE DISPOSITIVO BLOQUEADO
+  // 7. EXIBIR MODAL SELETO DE GERAÇÃO DE LICENÇA (24H, 30D, 6M, 1Y)
+  openGenerateCodeModal() {
+    let modal = document.getElementById('modalGenerateCode');
+    if (!modal) {
+      modal = document.createElement('div');
+      modal.id = 'modalGenerateCode';
+      modal.className = 'modal-overlay active';
+      modal.style.zIndex = '100000';
+      modal.innerHTML = `
+        <div class="modal-container" style="max-width:480px; border-radius:24px">
+          <div class="modal-header" style="background:var(--primary-gradient); color:#FFF">
+            <div style="display:flex; align-items:center; gap:0.5rem">
+              <i data-lucide="sparkles" style="width:22px; height:22px; color:#FFF"></i>
+              <h3 style="color:#FFF; font-weight:900">Gerar Código de Licença / Teste</h3>
+            </div>
+            <button class="icon-btn close-modal" style="color:#FFF; border-color:transparent; background:rgba(255,255,255,0.2)"><i data-lucide="x"></i></button>
+          </div>
+          <div class="modal-body" style="padding:1.5rem 1.25rem">
+            <div class="form-group">
+              <label class="form-label" style="font-weight:800">Escolha a Duração do Plano *</label>
+              <select id="selectPlanDuration" class="form-control" style="font-size:1rem; font-weight:700">
+                <option value="24h">⏱️ Teste Grátis (24 Horas de Acesso)</option>
+                <option value="30d">📅 Plano Mensal (30 Dias)</option>
+                <option value="6m">🗓️ Plano Semestral (6 Meses)</option>
+                <option value="1y" selected>⭐ Plano Anual VIP (1 Ano / 365 Dias)</option>
+              </select>
+            </div>
+
+            <button class="btn btn-orange w-full margin-top" id="btnConfirmGenerateCode">
+              ⚡ Gerar Código Agora
+            </button>
+
+            <div id="generatedCodeResultBox" class="hidden margin-top" style="background:#FFF7ED; border:1px solid #FDBA74; padding:1.15rem; border-radius:18px; text-align:center">
+              <span style="font-size:0.8rem; color:#C2410C; font-weight:800; text-transform:uppercase">Código Gerado com Sucesso:</span>
+              <div id="generatedCodeDisplay" style="font-size:1.4rem; font-weight:900; color:#EA580C; margin:0.4rem 0; letter-spacing:0.05em"></div>
+              <div style="display:flex; gap:0.5rem; margin-top:0.75rem">
+                <button class="btn btn-light btn-xs" id="btnCopyGenCode" style="flex:1">📋 Copiar Código</button>
+                <button class="btn btn-whatsapp btn-xs" id="btnSendGenCodeWA" style="flex:1">📲 Enviar no WhatsApp</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      `;
+      document.body.appendChild(modal);
+
+      modal.querySelector('.close-modal').onclick = () => modal.classList.remove('active');
+      
+      modal.querySelector('#btnConfirmGenerateCode').onclick = () => {
+        const plan = modal.querySelector('#selectPlanDuration').value;
+        const result = this.generateCodeByPlan(plan);
+        
+        const box = modal.querySelector('#generatedCodeResultBox');
+        const display = modal.querySelector('#generatedCodeDisplay');
+        display.textContent = result.code;
+        box.classList.remove('hidden');
+
+        modal.querySelector('#btnCopyGenCode').onclick = () => {
+          navigator.clipboard.writeText(result.code);
+          alert(`Código ${result.code} copiado para a área de transferência!`);
+        };
+
+        modal.querySelector('#btnSendGenCodeWA').onclick = () => {
+          const text = encodeURIComponent(`Olá! Aqui está o seu código de ativação do sistema Simples Agenda Pro (${result.label}):\n\n🔑 Código: *${result.code}*\n\nAcesse o sistema e digite este código na tela de ativação para liberar seu acesso!`);
+          window.open(`https://api.whatsapp.com/send?text=${text}`, '_blank');
+        };
+      };
+
+      if (window.lucide) window.lucide.createIcons();
+    } else {
+      modal.classList.add('active');
+    }
+  }
+
+  // 8. MODAL DE DISPOSITIVO BLOQUEADO
   showDeviceBlockedModal(lic) {
     let modal = document.getElementById('modalDeviceBlocked');
     if (!modal) {
@@ -179,7 +290,7 @@ class LicenseEngine {
           <div class="modal-header" style="background:#FEE2E2; color:#991B1B">
             <div style="display:flex; align-items:center; gap:0.6rem">
               <i data-lucide="lock" style="width:28px; height:28px; color:#DC2626"></i>
-              <h3 style="font-weight:900; color:#991B1B; font-size:1.15rem">ACESSO BLOQUEADO - PLANO MENSAL</h3>
+              <h3 style="font-weight:900; color:#991B1B; font-size:1.15rem">ACESSO BLOQUEADO - DISPOSITIVO NÃO AUTORIZADO</h3>
             </div>
           </div>
           <div class="modal-body" style="padding:1.5rem 1.25rem; text-align:center">
@@ -188,14 +299,10 @@ class LicenseEngine {
             </div>
             <h4 style="font-size:1.15rem; font-weight:900; color:#0F172A; margin-bottom:0.5rem">Dispositivo Não Autorizado</h4>
             <p class="text-muted" style="font-size:0.875rem; line-height:1.5">
-              Seu <strong>Plano Mensal</strong> está restrito a apenas <strong>1 dispositivo autorizado</strong>. O sistema detectou que este aparelho (${this.getDeviceId()}) é diferente do cadastrado.
+              Seu plano está vinculado a apenas 1 dispositivo autorizado. O sistema detectou que este aparelho (${this.getDeviceId()}) é diferente do cadastrado.
             </p>
-            <div style="background:#F8FAFC; border:1px solid #E2E8F0; padding:1rem; border-radius:16px; margin:1.25rem 0; font-size:0.825rem; text-align:left">
-              💡 <strong>Deseja usar em múltiplos aparelhos?</strong><br>
-              Migre para o <strong>Plano Anual VIP</strong> ou entre em contato para solicitar a liberação da troca de dispositivo.
-            </div>
-            <button class="btn btn-orange w-full" onclick="window.License.openRedeemModal()">
-              🔑 Inserir Código de Ativação Anual
+            <button class="btn btn-orange w-full margin-top" onclick="window.License.openRedeemModal()">
+              🔑 Inserir Código de Ativação
             </button>
           </div>
         </div>
@@ -225,7 +332,7 @@ class LicenseEngine {
           <div class="modal-body" style="padding:1.5rem 1.25rem; text-align:center">
             <h4 style="font-size:1.15rem; font-weight:900; color:#0F172A; margin-bottom:0.5rem">Sua Assinatura Expirou</h4>
             <p class="text-muted" style="font-size:0.875rem">
-              Renove sua assinatura mensal ou insira um novo código de ativação anual para continuar utilizando o sistema.
+              Insira um novo código de ativação (24h, 30 dias, 6 meses ou 1 ano) para liberar seu acesso.
             </p>
             <button class="btn btn-orange w-full margin-top" onclick="window.License.openRedeemModal()">
               🔑 Inserir Código de Ativação
@@ -250,13 +357,13 @@ class LicenseEngine {
           <div class="modal-header" style="background:var(--primary-gradient); color:#FFF">
             <div style="display:flex; align-items:center; gap:0.5rem">
               <i data-lucide="key" style="width:22px; height:22px; color:#FFF"></i>
-              <h3 style="color:#FFF; font-weight:900">Ativar Código de Licença Anual</h3>
+              <h3 style="color:#FFF; font-weight:900">Ativar Código de Licença</h3>
             </div>
             <button class="icon-btn close-modal" style="color:#FFF; border-color:transparent; background:rgba(255,255,255,0.2)"><i data-lucide="x"></i></button>
           </div>
           <div class="modal-body" style="padding:1.5rem 1.25rem">
             <label class="form-label" style="font-weight:800">Digite seu Código de Ativação *</label>
-            <input type="text" id="inputActivationCode" class="form-control" placeholder="Ex: GN-2026-X9K2-M4P1" style="font-size:1.1rem; font-weight:800; text-transform:uppercase; letter-spacing:0.05em; text-align:center; padding:0.85rem">
+            <input type="text" id="inputActivationCode" class="form-control" placeholder="Ex: GN-TESTE-X9K2 / GN-ANO-M4P1" style="font-size:1.1rem; font-weight:800; text-transform:uppercase; letter-spacing:0.05em; text-align:center; padding:0.85rem">
             
             <button class="btn btn-orange w-full margin-top" id="btnSubmitActivationCode">
               🚀 Ativar Licença Agora

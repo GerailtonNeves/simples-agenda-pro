@@ -672,13 +672,13 @@
 
               <div class="margin-top" style="display:flex; flex-direction:column; gap:0.75rem">
                 <button class="btn btn-orange w-full" onclick="window.License.openRedeemModal()">
-                  🔑 Inserir Código de Ativação Anual (VIP)
+                  <i data-lucide="key"></i> Inserir Código de Ativação
                 </button>
-                <button class="btn btn-outline w-full" onclick="generateAdminCode()">
-                  ⚡ Gerar Novo Código de Ativação Anual (Para Vender ao Cliente)
+                <button class="btn btn-outline w-full" onclick="window.License.openGenerateCodeModal()">
+                  <i data-lucide="sparkles"></i> ⚡ Gerar Código (24h / 30 Dias / 6 Meses / 1 Ano)
                 </button>
                 <button class="btn btn-light btn-xs w-full" onclick="if(confirm('Desvincular o dispositivo atual para permitir login em outro aparelho?')){ window.License.resetMonthlyDeviceBinding(); alert('Dispositivo atualizado com sucesso!'); location.reload(); }">
-                  🔄 Desvincular / Resetar Dispositivo Mensal
+                  <i data-lucide="refresh-cw"></i> Resetar Dispositivo Mensal Autorizado
                 </button>
               </div>
             </div>
