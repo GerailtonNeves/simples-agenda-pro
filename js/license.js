@@ -12,6 +12,11 @@ class LicenseEngine {
     this.ensureDeviceId();
     this.ensureDefaultLicense();
     this.checkLicenseLock();
+
+    // Verificação contínua a cada 10 segundos para testar expiração em tempo real (ex: licenças de 5 minutos ou 24h)
+    setInterval(() => {
+      this.checkLicenseLock();
+    }, 10000);
   }
 
   // 1. GERAR IDENTIFICADOR ÚNICO DE DISPOSITIVO (HARDWARE FINGERPRINT)
@@ -45,7 +50,7 @@ class LicenseEngine {
     // Licença Padrão (Mensal Ativa Vinculada ao Dispositivo Atual)
     const devId = this.getDeviceId();
     const defaultLic = {
-      plan: 'MENSAL (30 Dias)', // 'TESTE 24H', 'MENSAL (30 Dias)', 'SEMESTRAL (6 Meses)', 'ANUAL VIP'
+      plan: 'MENSAL (30 Dias)',
       status: 'ATIVO',
       expirationDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
       boundDeviceId: devId,
@@ -66,13 +71,19 @@ class LicenseEngine {
     this.getLicense();
   }
 
-  // 3. LOGICA DE BLOQUEIO POR DISPOSITIVO (MENSAL X MULTIDISPOSITIVOS ANUAL)
+  // 3. LÓGICA DE BLOQUEIO POR DISPOSITIVO & EXPIRAÇÃO EM TEMPO REAL
   checkLicenseLock() {
     const lic = this.getLicense();
     const currentDevId = this.getDeviceId();
 
-    // Se o plano for MENSAL ou TESTE 24H e estiver vinculado a outro dispositivo
-    if (lic.plan && (lic.plan.includes('MENSAL') || lic.plan.includes('TESTE') || lic.plan.includes('30'))) {
+    // Se a licença já estiver em status expirado, manter bloqueado
+    if (lic.status === 'EXPIRADO') {
+      this.showExpiredModal(lic);
+      return false;
+    }
+
+    // Se o plano for MENSAL ou TESTE (5m / 24h) e estiver vinculado a outro dispositivo
+    if (lic.plan && (lic.plan.includes('MENSAL') || lic.plan.includes('TESTE') || lic.plan.includes('30') || lic.plan.includes('5 Minutos'))) {
       if (!lic.boundDeviceId) {
         lic.boundDeviceId = currentDevId;
         this.saveLicense(lic);
@@ -83,7 +94,7 @@ class LicenseEngine {
       }
     }
 
-    // Verificar se a data de expiração passou
+    // Verificar se a data/hora de expiração já passou
     if (lic.expirationDate && new Date(lic.expirationDate) < new Date()) {
       lic.status = 'EXPIRADO';
       this.saveLicense(lic);
@@ -94,7 +105,7 @@ class LicenseEngine {
     return true;
   }
 
-  // 4. GERADOR MULTIPLANOS DE CÓDIGOS DE ATIVAÇÃO (24H, 30 DIAS, 6 MESES, ANUAL)
+  // 4. GERADOR MULTIPLANOS DE CÓDIGOS DE ATIVAÇÃO (5 MINUTOS, 24H, 30 DIAS, 6 MESES, ANUAL)
   generateCodeByPlan(planType) {
     const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
     const randSeg = (len) => {
@@ -106,7 +117,10 @@ class LicenseEngine {
     let prefix = 'GN-ANO';
     let label = 'Anual VIP (1 Ano)';
 
-    if (planType === '24h') {
+    if (planType === '5m') {
+      prefix = 'GN-5MIN';
+      label = 'Teste Rápido (5 Minutos)';
+    } else if (planType === '24h') {
       prefix = 'GN-TESTE';
       label = 'Teste Grátis (24 Horas)';
     } else if (planType === '30d') {
@@ -143,14 +157,18 @@ class LicenseEngine {
     const cleanCode = inputCode.trim().toUpperCase();
     const lic = this.getLicense();
 
-    // Buscar no histórico local ou interpretar prefixos oficiais
     const codeObj = (lic.generatedCodes || []).find(c => c.code === cleanCode);
     
+    let minutesToAdd = 0;
     let daysToAdd = 365;
     let planLabel = 'ANUAL VIP (1 Ano)';
     let isMultiDevice = true;
 
-    if (cleanCode.includes('TESTE') || (codeObj && codeObj.planType === '24h')) {
+    if (cleanCode.includes('5MIN') || cleanCode.includes('5M') || (codeObj && codeObj.planType === '5m')) {
+      minutesToAdd = 5;
+      planLabel = 'TESTE RÁPIDO (5 Minutos)';
+      isMultiDevice = false;
+    } else if (cleanCode.includes('TESTE') || (codeObj && codeObj.planType === '24h')) {
       daysToAdd = 1;
       planLabel = 'TESTE GRÁTIS (24 Horas)';
       isMultiDevice = false;
@@ -174,13 +192,17 @@ class LicenseEngine {
       lic.activationCode = cleanCode;
       
       const expDate = new Date();
-      expDate.setTime(expDate.getTime() + daysToAdd * 24 * 60 * 60 * 1000);
+      if (minutesToAdd > 0) {
+        expDate.setTime(expDate.getTime() + minutesToAdd * 60 * 1000);
+      } else {
+        expDate.setTime(expDate.getTime() + daysToAdd * 24 * 60 * 60 * 1000);
+      }
       lic.expirationDate = expDate.toISOString();
       
       if (isMultiDevice) {
-        lic.boundDeviceId = null; // Acesso ilimitado em múltiplos dispositivos
+        lic.boundDeviceId = null;
       } else {
-        lic.boundDeviceId = this.getDeviceId(); // Vinculado ao dispositivo atual
+        lic.boundDeviceId = this.getDeviceId();
       }
 
       if (codeObj) {
@@ -189,7 +211,8 @@ class LicenseEngine {
       }
 
       this.saveLicense(lic);
-      return { success: true, message: `🎉 Licença ${planLabel} Ativada com Sucesso! Acesso liberado no sistema até ${expDate.toLocaleDateString('pt-BR')}.` };
+      const timeFormatted = minutesToAdd > 0 ? expDate.toLocaleTimeString('pt-BR') : expDate.toLocaleDateString('pt-BR');
+      return { success: true, message: `🎉 Licença ${planLabel} Ativada com Sucesso! Acesso liberado no sistema até ${timeFormatted}.` };
     }
 
     return { success: false, message: '❌ Código de ativação inválido ou não encontrado. Verifique o código e tente novamente.' };
@@ -204,7 +227,7 @@ class LicenseEngine {
     return true;
   }
 
-  // 7. EXIBIR MODAL SELETO DE GERAÇÃO DE LICENÇA (24H, 30D, 6M, 1Y)
+  // 7. EXIBIR MODAL SELETO DE GERAÇÃO DE LICENÇA (5M, 24H, 30D, 6M, 1Y)
   openGenerateCodeModal() {
     let modal = document.getElementById('modalGenerateCode');
     if (!modal) {
@@ -225,6 +248,7 @@ class LicenseEngine {
             <div class="form-group">
               <label class="form-label" style="font-weight:800">Escolha a Duração do Plano *</label>
               <select id="selectPlanDuration" class="form-control" style="font-size:1rem; font-weight:700">
+                <option value="5m">⚡ Teste Rápido de Vencimento (5 Minutos)</option>
                 <option value="24h">⏱️ Teste Grátis (24 Horas de Acesso)</option>
                 <option value="30d">📅 Plano Mensal (30 Dias)</option>
                 <option value="6m">🗓️ Plano Semestral (6 Meses)</option>
@@ -332,7 +356,7 @@ class LicenseEngine {
           <div class="modal-body" style="padding:1.5rem 1.25rem; text-align:center">
             <h4 style="font-size:1.15rem; font-weight:900; color:#0F172A; margin-bottom:0.5rem">Sua Assinatura Expirou</h4>
             <p class="text-muted" style="font-size:0.875rem">
-              Insira um novo código de ativação (24h, 30 dias, 6 meses ou 1 ano) para liberar seu acesso.
+              Insira um novo código de ativação (5min, 24h, 30 dias, 6 meses ou 1 ano) para liberar seu acesso.
             </p>
             <button class="btn btn-orange w-full margin-top" onclick="window.License.openRedeemModal()">
               🔑 Inserir Código de Ativação
@@ -342,6 +366,8 @@ class LicenseEngine {
       `;
       document.body.appendChild(modal);
       if (window.lucide) window.lucide.createIcons();
+    } else {
+      modal.classList.add('active');
     }
   }
 
@@ -363,7 +389,7 @@ class LicenseEngine {
           </div>
           <div class="modal-body" style="padding:1.5rem 1.25rem">
             <label class="form-label" style="font-weight:800">Digite seu Código de Ativação *</label>
-            <input type="text" id="inputActivationCode" class="form-control" placeholder="Ex: GN-TESTE-X9K2 / GN-ANO-M4P1" style="font-size:1.1rem; font-weight:800; text-transform:uppercase; letter-spacing:0.05em; text-align:center; padding:0.85rem">
+            <input type="text" id="inputActivationCode" class="form-control" placeholder="Ex: GN-5MIN-X9K2 / GN-ANO-M4P1" style="font-size:1.1rem; font-weight:800; text-transform:uppercase; letter-spacing:0.05em; text-align:center; padding:0.85rem">
             
             <button class="btn btn-orange w-full margin-top" id="btnSubmitActivationCode">
               🚀 Ativar Licença Agora
