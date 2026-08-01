@@ -650,6 +650,41 @@
 
             <div class="settings-card">
               <div class="card-header-icon">
+                <div class="card-icon-wrapper metric-orange">
+                  <i data-lucide="key"></i>
+                </div>
+                <div>
+                  <h3>Gerenciamento de Licença & Ativação</h3>
+                  <p class="text-muted">Controle seu plano de assinatura (Mensal / Anual) e resgate códigos de licença VIP.</p>
+                </div>
+              </div>
+
+              <div style="background:var(--bg-surface-secondary); padding:1.15rem; border-radius:var(--radius-lg); border:1px solid var(--border-color); margin-top:1rem">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.75rem">
+                  <span style="font-size:0.8rem; font-weight:800; color:var(--text-muted); text-transform:uppercase">Status do Plano Atual:</span>
+                  <span class="badge badge-success" id="licenseStatusBadge" style="font-size:0.8rem">🟢 PLANO ATIVO (MENSAL)</span>
+                </div>
+                <div style="font-size:0.875rem; color:var(--text-main); display:flex; flex-direction:column; gap:0.35rem">
+                  <div>📱 <strong>Dispositivo Autorizado:</strong> <span id="licenseDeviceDisplay" style="color:var(--primary); font-weight:800">Carregando...</span></div>
+                  <div>📅 <strong>Validade da Assinatura:</strong> <span id="licenseExpDisplay" style="font-weight:700">30 dias restantes</span></div>
+                </div>
+              </div>
+
+              <div class="margin-top" style="display:flex; flex-direction:column; gap:0.75rem">
+                <button class="btn btn-orange w-full" onclick="window.License.openRedeemModal()">
+                  🔑 Inserir Código de Ativação Anual (VIP)
+                </button>
+                <button class="btn btn-outline w-full" onclick="generateAdminCode()">
+                  ⚡ Gerar Novo Código de Ativação Anual (Para Vender ao Cliente)
+                </button>
+                <button class="btn btn-light btn-xs w-full" onclick="if(confirm('Desvincular o dispositivo atual para permitir login em outro aparelho?')){ window.License.resetMonthlyDeviceBinding(); alert('Dispositivo atualizado com sucesso!'); location.reload(); }">
+                  🔄 Desvincular / Resetar Dispositivo Mensal
+                </button>
+              </div>
+            </div>
+
+            <div class="settings-card">
+              <div class="card-header-icon">
                 <div class="card-icon-wrapper metric-green">
                   <i data-lucide="shield-check"></i>
                 </div>
@@ -1233,6 +1268,32 @@
   <script src="js/booking-portal.js"></script>
   <script src="js/settings.js"></script>
   <script src="js/calculator.js"></script>
+  <script src="js/license.js"></script>
   <script src="js/app.js"></script>
+
+  <script>
+    function generateAdminCode() {
+      if (window.License) {
+        const code = window.License.generateAnnualActivationCode();
+        alert(`🔑 CÓDIGO DE ATIVAÇÃO ANUAL GERADO COM SUCESSO!\n\nCódigo: ${code}\n\nForneça este código ao cliente para ativar 365 dias de acesso ilimitado em qualquer dispositivo.`);
+      }
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      if (window.License) {
+        const lic = window.License.getLicense();
+        const badge = document.getElementById('licenseStatusBadge');
+        const devDisp = document.getElementById('licenseDeviceDisplay');
+        const expDisp = document.getElementById('licenseExpDisplay');
+
+        if (badge) badge.textContent = `🟢 PLANO ATIVO (${lic.plan})`;
+        if (devDisp) devDisp.textContent = lic.plan === 'ANUAL' ? 'Dispositivos Ilimitados (Licença VIP)' : window.License.getDeviceId();
+        if (expDisp) {
+          const expDate = lic.expirationDate ? lic.expirationDate.split('T')[0].split('-').reverse().join('/') : '30 dias';
+          expDisp.textContent = `Válido até ${expDate}`;
+        }
+      }
+    });
+  </script>
 </body>
 </html>
